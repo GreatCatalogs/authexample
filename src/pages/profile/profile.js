@@ -42,6 +42,7 @@ export default () => {
           onFieldDataChanged={e => e.dataField === 'Notes' && setNotes(e.value)}
           labelLocation={'top'}
           colCountByScreen={colCountByScreen}
+        
         />
       </div>
     </React.Fragment>

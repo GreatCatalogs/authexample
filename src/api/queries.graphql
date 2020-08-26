@@ -1,0 +1,403 @@
+fragment CatalogLite on Catalog {
+  id
+  oid
+  name
+  merchantId
+  customSubdomain
+  text2Disclaimer
+  options
+  description
+  account: accountByAccount {
+    logo
+    name
+    active
+  }
+}
+
+fragment Page on Page {
+      oid
+      imageSource
+      imageUrl
+      pageType
+      options
+}
+
+fragment Feed on Feed{
+  	oid
+    feedType
+    feedMap
+    productMap
+    autoUpdate
+    options
+    dateModified
+    catalog: catalogByCatalog {
+      id
+      oid
+      name
+    }
+}
+
+fragment Catalog on Catalog {
+  ...CatalogLite
+  activeVersion: versionByActiveVersion {
+    ...VersionLite
+  }
+  versions: versionsByCatalog(orderBy: ID_DESC, offset: 0) {
+    ...VersionLite
+  }
+}
+
+fragment VersionLite on Version {
+  id
+  oid
+  name
+  coverUrl
+  enableCategoryCatalogs
+  contactUrl
+  description
+  options
+  versionNo
+}
+
+fragment Version on Version {
+  ...VersionLite
+  catalog: catalogByCatalog {
+    ...CatalogLite
+  }
+}
+
+fragment Category on Category {
+  id
+  oid
+  name
+  image
+  options
+  subcategories: subCategoriesByCategory {
+    id
+    oid
+    name
+    image
+    options
+  }
+}
+
+fragment Product on Product {
+  oid
+  sku
+  title
+  price
+  url
+  src
+  category
+  brand
+  tags
+  color
+  expired
+  options
+}
+
+query GetActiveAccounts {
+  accounts(condition: { active: true }, orderBy: NAME_ASC) {
+    oid
+    name
+    email
+    legacyId
+    active
+    logo
+    catalogs: catalogsByAccount {
+      ...Catalog
+    }
+  }
+}
+
+query GetCatalogByOid($oid: UUID!) {
+  catalog(oid: $oid) {
+    ...Catalog
+  }
+}
+
+query GetCatalogByVersionId($id: Int!) {
+  version: versionById(id: $id) {
+    ...Version
+  }
+}
+query GetCatalogById($id: Int!) {
+  catalog: catalogById(id: $id) {
+    ...Catalog
+  }
+}
+
+query GetAllAuthorizedUsers {
+  authorizedUsers {
+    oid
+    email
+    accounts: authorizedUserAuthorizedUsersAccountPartnerAccessesByAuthorizedUsersConnection {
+      totalCount
+    }
+  }
+}
+
+query GetUserByEmail($email: String!) {
+  user: authorizedUserByEmail(email: $email) {
+    oid
+    email
+    allAccounts: authorizedUserAuthorizedUsersAccountPartnerAccessesByAuthorizedUsers {
+      account: accountByPartnerAccess {
+        oid
+        legacyId
+        name
+        active
+        catalogs: catalogsByAccount {
+          ...Catalog
+        }
+      }
+    }
+  }
+}
+
+query GetVersionFullById($id: Int!) {
+  version: versionById(id: $id) {
+    ...VersionLite
+    products: productsByVersionsByVersionOid {
+      sku
+    }
+    pages: pagesByVersion {
+      ...Page
+    }
+    catalog: catalogByCatalog {
+      ...CatalogLite
+      products: productsByCatalog {
+        ...Product
+      }
+    }
+  }
+}
+
+query GetProductsByVersionId($id: Int!) {
+  version: versionById(id: $id) {
+    id
+    oid
+    name
+    catalog: catalogByCatalog {
+      id
+      oid
+      products: productsByCatalog {
+        ...Product
+      }
+    }
+  }
+}
+query GetActiveVersionByCatalogID($id: Int!) {
+  catalog: catalogById(id: $id) {
+    ...CatalogLite
+    activeVersion: versionByActiveVersion {
+      ...VersionLite
+    }
+  }
+}
+
+query GetProductsCatalog($oid: UUID!) {
+  catalog(oid: $oid) {
+    id
+    oid
+    products: productsByCatalog {
+      ...Product
+    }
+  }
+}
+
+query GetProductsByCatalogId($id: Int!) {
+  catalog: catalogById(id: $id) {
+    id
+    oid
+    products: productsByCatalog {
+      ...Product
+    }
+  }
+}
+query GetCategoriesByCatalogId($oid: UUID!) {
+  catalog(oid: $oid) {
+    id
+    oid
+    categories: categoriesByCatalog {
+      ...Category
+    }
+  }
+}
+query GetCatalogCategories($id: Int!) {
+  catalog: catalogById(id: $id) {
+    id
+    oid
+    categories: categoriesByCatalog {
+      ...Category
+    }
+  }
+}
+query GetCategoriesByVersionId($id: Int!) {
+  version: versionById(id: $id) {
+    id
+    oid
+    name
+    catalog: catalogByCatalog {
+      id
+      oid
+      categories: categoriesByCatalog {
+        ...Category
+      }
+    }
+  }
+}
+query GetLeadsAccount($account: UUID!) {
+  leads(condition: { account: $account }) {
+    oid
+    firstName
+    lastName
+    email
+    phone
+    catalogId
+    versionId
+    accountByAccount {
+      name
+    }
+  }
+}
+
+mutation UpdatePage($id: UUID!, $payload: PagePatch!) {
+  updatePage(input: { patch: $payload, oid: $id }) {
+    page {
+      ...Page
+    }
+  }
+}
+mutation CreateCatalog($catalog: CatalogInput!) {
+  createCatalog(input: { catalog: $catalog }) {
+    catalog {
+      ...Catalog
+    }
+  }
+}
+mutation UpdateCatalog($catalog: CatalogPatch!, $oid: UUID!) {
+  updateCatalog(input: { patch: $catalog, oid: $oid }) {
+    catalog {
+      ...Catalog
+    }
+  }
+}
+mutation DeleteCatalog($oid: UUID!) {
+  deleteCatalog(input: { oid: $oid }) {
+    catalog {
+      oid
+      id
+    }
+  }
+}
+mutation CreateVersion($version: VersionInput!) {
+  createVersion(input: { version: $version }) {
+    version {
+      ...Version
+    }
+  }
+}
+mutation UpdateVersion($version: VersionPatch!, $oid: UUID!) {
+  updateVersion(input: { patch: $version, oid: $oid }) {
+    version {
+    ...Version
+    }
+  }
+}
+mutation DeleteVersion($oid: UUID!) {
+  deleteVersion(input: { oid: $oid }) {
+    clientMutationId
+    catalog: catalogByCatalog {
+      oid
+      id
+    }
+  }
+}
+mutation CreatePage($page: PageInput!) {
+  createPage(input: { page: $page }) {
+    page {
+      ...Page
+    }
+  }
+}
+mutation DeletePage($oid: UUID!) {
+  deletePage(input: { oid: $oid }) {
+    page {
+      oid
+    }
+  }
+}
+query GetCatalogFeeds {
+  feeds {
+    ...Feed
+  }
+}
+
+mutation CreateFeed($feed: FeedInput!) {
+  createFeed(input: { feed: $feed }) {
+    feed {
+      ...Feed
+    }
+  }
+}
+mutation UpdateFeed($feed: FeedPatch!, $oid: UUID!) {
+  updateFeed(input: { patch: $feed, oid: $oid }) {
+    feed {
+      ...Feed
+    }
+  }
+}
+mutation DeleteFeed($oid: UUID!) {
+  deleteFeed(input: { oid: $oid }) {
+    feed {
+      oid      
+    }
+  }
+}
+mutation CreateCategory($category: CategoryInput!) {
+  createCategory(input: { category: $category }) {
+    category {
+      ...Category
+    }
+  }
+}
+mutation UpdateCategory($category: CategoryPatch!, $oid: UUID!) {
+  updateCategory(input: { patch: $category, oid: $oid }) {
+    category {
+      ...Category
+    }
+  }
+}
+mutation DeleteCategory($oid: UUID!) {
+  deleteCategory(input: { oid: $oid }) {
+    category {
+      oid
+      id
+    }
+  }
+}
+mutation CreateProduct($product: ProductInput!) {
+  createProduct(input: { product: $product }) {
+    product {
+      ...Product
+    }
+  }
+}
+
+mutation UpdateProduct($product: ProductPatch!, $oid: UUID!) {
+  updateProduct(input: { patch: $product, oid: $oid }) {
+    product {
+      ...Product
+    }
+  }
+}
+
+mutation DeleteProduct($oid: UUID!) {
+  deleteProduct(input: { oid: $oid }) {
+    product {
+      oid
+      id
+    }
+  }
+}

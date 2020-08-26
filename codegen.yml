@@ -1,0 +1,16 @@
+schema: https://gql.catalogshub.com/new
+documents: 'src/api/*.graphql'
+generates:
+  src/api/types.ts:
+    - typescript
+  src/api:
+    preset: near-operation-file
+    presetConfig:
+      extension: .generated.tsx
+      baseTypesPath: types.ts
+    plugins:
+      - typescript-operations
+      - typescript-react-apollo
+    config:
+      withRefetchFn: true
+      withMutationFn: true

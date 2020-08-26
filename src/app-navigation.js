@@ -22,5 +22,10 @@ export const navigation = [
     text: 'Products',
     path: '/products',
     icon: 'folder'
+  }, 
+  {
+    text: 'Categories',
+    path: '/categories',
+    icon: 'folder'
   }
   ];

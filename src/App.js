@@ -10,6 +10,8 @@ import { AuthProvider, useAuth } from './contexts/auth';
 import { useScreenSizeClass } from './utils/media-query';
 import Content from './Content';
 import NotAuthenticatedContent from './NotAuthenticatedContent';
+import client from './api/client.js';
+import { ApolloProvider } from '@apollo/client';
 
 function App() {
   const { user, loading } = useAuth();
@@ -30,13 +32,15 @@ export default function () {
 
   return (
     <Router>
-      <AuthProvider>
-        <NavigationProvider>
-          <div className={`app ${screenSizeClass}`}>
-            <App />
-          </div>
-        </NavigationProvider>
-      </AuthProvider>
+      <ApolloProvider client={client}>
+        <AuthProvider>
+          <NavigationProvider>
+            <div className={`app ${screenSizeClass}`}>
+              <App />
+            </div>
+          </NavigationProvider>
+        </AuthProvider>
+      </ApolloProvider>
     </Router>
   );
 }
