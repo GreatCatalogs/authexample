@@ -2,13 +2,14 @@ import * as Types from './types';
 
 import { gql } from '@apollo/client';
 import * as Apollo from '@apollo/client';
-export type CatalogLiteFragment = (
+export type CatalogFragment = (
   { __typename?: 'Catalog' }
-  & Pick<Types.Catalog, 'id' | 'oid' | 'name' | 'merchantId' | 'customSubdomain' | 'text2Disclaimer' | 'options' | 'description'>
-  & { account?: Types.Maybe<(
-    { __typename?: 'Account' }
-    & Pick<Types.Account, 'logo' | 'name' | 'active'>
-  )> }
+  & Pick<Types.Catalog, 'id' | 'oid' | 'name' | 'title' | 'merchantId' | 'customSubdomain' | 'text2Disclaimer' | 'options' | 'description'>
+);
+
+export type ProductFragment = (
+  { __typename?: 'Product' }
+  & Pick<Types.Product, 'src' | 'additionalImages' | 'sku' | 'category' | 'tags' | 'title' | 'description' | 'url' | 'price' | 'salePrice' | 'options' | 'oid' | 'expired' | 'status'>
 );
 
 export type PageFragment = (
@@ -25,30 +26,9 @@ export type FeedFragment = (
   )> }
 );
 
-export type CatalogFragment = (
-  { __typename?: 'Catalog' }
-  & { activeVersion?: Types.Maybe<(
-    { __typename?: 'Version' }
-    & VersionLiteFragment
-  )>, versions: Array<(
-    { __typename?: 'Version' }
-    & VersionLiteFragment
-  )> }
-  & CatalogLiteFragment
-);
-
-export type VersionLiteFragment = (
-  { __typename?: 'Version' }
-  & Pick<Types.Version, 'id' | 'oid' | 'name' | 'coverUrl' | 'enableCategoryCatalogs' | 'contactUrl' | 'description' | 'options' | 'versionNo'>
-);
-
 export type VersionFragment = (
   { __typename?: 'Version' }
-  & { catalog?: Types.Maybe<(
-    { __typename?: 'Catalog' }
-    & CatalogLiteFragment
-  )> }
-  & VersionLiteFragment
+  & Pick<Types.Version, 'id' | 'oid' | 'name' | 'coverUrl' | 'enableCategoryCatalogs' | 'contactUrl' | 'description' | 'options' | 'versionNo' | 'order'>
 );
 
 export type CategoryFragment = (
@@ -56,73 +36,205 @@ export type CategoryFragment = (
   & Pick<Types.Category, 'id' | 'oid' | 'name' | 'image' | 'options'>
   & { subcategories: Array<(
     { __typename?: 'SubCategory' }
-    & Pick<Types.SubCategory, 'id' | 'oid' | 'name' | 'image' | 'options'>
+    & Pick<Types.SubCategory, 'id' | 'name' | 'image'>
+    & { parent?: Types.Maybe<(
+      { __typename?: 'Category' }
+      & Pick<Types.Category, 'name'>
+    )> }
   )> }
 );
 
-export type ProductFragment = (
-  { __typename?: 'Product' }
-  & Pick<Types.Product, 'oid' | 'sku' | 'title' | 'price' | 'url' | 'src' | 'category' | 'brand' | 'tags' | 'color' | 'expired' | 'options'>
+export type ProductBySkuQueryVariables = Types.Exact<{
+  sku: Types.Scalars['String'];
+  catalog: Types.Scalars['UUID'];
+}>;
+
+
+export type ProductBySkuQuery = (
+  { __typename?: 'Query' }
+  & { products?: Types.Maybe<Array<(
+    { __typename?: 'Product' }
+    & ProductFragment
+  )>> }
 );
 
-export type GetActiveAccountsQueryVariables = Types.Exact<{ [key: string]: never; }>;
+export type FullCatalogByIdQueryVariables = Types.Exact<{
+  id: Types.Scalars['Int'];
+}>;
 
 
-export type GetActiveAccountsQuery = (
+export type FullCatalogByIdQuery = (
+  { __typename?: 'Query' }
+  & { catalog?: Types.Maybe<(
+    { __typename?: 'Catalog' }
+    & { products: Array<(
+      { __typename?: 'Product' }
+      & ProductFragment
+    )>, categories: Array<(
+      { __typename?: 'Category' }
+      & { products: Array<(
+        { __typename?: 'SubProduct' }
+        & Pick<Types.SubProduct, 'sku' | 'sub' | 'main'>
+      )> }
+      & CategoryFragment
+    )>, version?: Types.Maybe<(
+      { __typename?: 'Version' }
+      & { pages: Array<(
+        { __typename?: 'Page' }
+        & PageFragment
+      )> }
+      & VersionFragment
+    )>, account?: Types.Maybe<(
+      { __typename?: 'Account' }
+      & Pick<Types.Account, 'logo' | 'name'>
+      & { catalogs: Array<(
+        { __typename?: 'Catalog' }
+        & Pick<Types.Catalog, 'id' | 'oid' | 'merchantId'>
+        & { activeVersion?: Types.Maybe<(
+          { __typename?: 'Version' }
+          & Pick<Types.Version, 'id' | 'oid' | 'name' | 'coverUrl'>
+        )> }
+      )> }
+    )> }
+    & CatalogFragment
+  )> }
+);
+
+export type FullVersionByIdQueryVariables = Types.Exact<{
+  id: Types.Scalars['Int'];
+}>;
+
+
+export type FullVersionByIdQuery = (
+  { __typename?: 'Query' }
+  & { version?: Types.Maybe<(
+    { __typename?: 'Version' }
+    & { pages: Array<(
+      { __typename?: 'Page' }
+      & PageFragment
+    )>, catalog?: Types.Maybe<(
+      { __typename?: 'Catalog' }
+      & { products: Array<(
+        { __typename?: 'Product' }
+        & ProductFragment
+      )>, categories: Array<(
+        { __typename?: 'Category' }
+        & { products: Array<(
+          { __typename?: 'SubProduct' }
+          & Pick<Types.SubProduct, 'sku' | 'sub' | 'main'>
+        )> }
+        & CategoryFragment
+      )>, account?: Types.Maybe<(
+        { __typename?: 'Account' }
+        & Pick<Types.Account, 'logo' | 'name'>
+        & { catalogs: Array<(
+          { __typename?: 'Catalog' }
+          & Pick<Types.Catalog, 'id' | 'oid' | 'merchantId'>
+          & { activeVersion?: Types.Maybe<(
+            { __typename?: 'Version' }
+            & Pick<Types.Version, 'id' | 'oid' | 'name' | 'coverUrl'>
+          )> }
+        )> }
+      )> }
+      & CatalogFragment
+    )> }
+    & VersionFragment
+  )> }
+);
+
+export type ActiveAccountsQueryVariables = Types.Exact<{ [key: string]: never; }>;
+
+
+export type ActiveAccountsQuery = (
   { __typename?: 'Query' }
   & { accounts?: Types.Maybe<Array<(
     { __typename?: 'Account' }
     & Pick<Types.Account, 'oid' | 'name' | 'email' | 'legacyId' | 'active' | 'logo'>
     & { catalogs: Array<(
       { __typename?: 'Catalog' }
+      & { activeVersion?: Types.Maybe<(
+        { __typename?: 'Version' }
+        & VersionFragment
+      )>, versions: Array<(
+        { __typename?: 'Version' }
+        & VersionFragment
+      )> }
       & CatalogFragment
     )> }
   )>> }
 );
 
-export type GetCatalogByOidQueryVariables = Types.Exact<{
+export type CatalogByOidQueryVariables = Types.Exact<{
   oid: Types.Scalars['UUID'];
 }>;
 
 
-export type GetCatalogByOidQuery = (
+export type CatalogByOidQuery = (
   { __typename?: 'Query' }
   & { catalog?: Types.Maybe<(
     { __typename?: 'Catalog' }
+    & { account?: Types.Maybe<(
+      { __typename?: 'Account' }
+      & Pick<Types.Account, 'logo' | 'name' | 'active'>
+    )>, activeVersion?: Types.Maybe<(
+      { __typename?: 'Version' }
+      & VersionFragment
+    )>, versions: Array<(
+      { __typename?: 'Version' }
+      & VersionFragment
+    )> }
     & CatalogFragment
   )> }
 );
 
-export type GetCatalogByVersionIdQueryVariables = Types.Exact<{
+export type CatalogByVersionIdQueryVariables = Types.Exact<{
   id: Types.Scalars['Int'];
 }>;
 
 
-export type GetCatalogByVersionIdQuery = (
+export type CatalogByVersionIdQuery = (
   { __typename?: 'Query' }
   & { version?: Types.Maybe<(
     { __typename?: 'Version' }
+    & { catalog?: Types.Maybe<(
+      { __typename?: 'Catalog' }
+      & { account?: Types.Maybe<(
+        { __typename?: 'Account' }
+        & Pick<Types.Account, 'logo' | 'name' | 'active'>
+      )> }
+      & CatalogFragment
+    )> }
     & VersionFragment
   )> }
 );
 
-export type GetCatalogByIdQueryVariables = Types.Exact<{
+export type CatalogByIdQueryVariables = Types.Exact<{
   id: Types.Scalars['Int'];
 }>;
 
 
-export type GetCatalogByIdQuery = (
+export type CatalogByIdQuery = (
   { __typename?: 'Query' }
   & { catalog?: Types.Maybe<(
     { __typename?: 'Catalog' }
+    & { account?: Types.Maybe<(
+      { __typename?: 'Account' }
+      & Pick<Types.Account, 'logo' | 'name' | 'active'>
+    )>, activeVersion?: Types.Maybe<(
+      { __typename?: 'Version' }
+      & VersionFragment
+    )>, versions: Array<(
+      { __typename?: 'Version' }
+      & VersionFragment
+    )> }
     & CatalogFragment
   )> }
 );
 
-export type GetAllAuthorizedUsersQueryVariables = Types.Exact<{ [key: string]: never; }>;
+export type AllAuthorizedUsersQueryVariables = Types.Exact<{ [key: string]: never; }>;
 
 
-export type GetAllAuthorizedUsersQuery = (
+export type AllAuthorizedUsersQuery = (
   { __typename?: 'Query' }
   & { authorizedUsers?: Types.Maybe<Array<(
     { __typename?: 'AuthorizedUser' }
@@ -134,12 +246,12 @@ export type GetAllAuthorizedUsersQuery = (
   )>> }
 );
 
-export type GetUserByEmailQueryVariables = Types.Exact<{
+export type UserByEmailQueryVariables = Types.Exact<{
   email: Types.Scalars['String'];
 }>;
 
 
-export type GetUserByEmailQuery = (
+export type UserByEmailQuery = (
   { __typename?: 'Query' }
   & { user?: Types.Maybe<(
     { __typename?: 'AuthorizedUser' }
@@ -151,6 +263,16 @@ export type GetUserByEmailQuery = (
         & Pick<Types.Account, 'oid' | 'legacyId' | 'name' | 'active'>
         & { catalogs: Array<(
           { __typename?: 'Catalog' }
+          & { account?: Types.Maybe<(
+            { __typename?: 'Account' }
+            & Pick<Types.Account, 'logo' | 'name' | 'active'>
+          )>, activeVersion?: Types.Maybe<(
+            { __typename?: 'Version' }
+            & VersionFragment
+          )>, versions: Array<(
+            { __typename?: 'Version' }
+            & VersionFragment
+          )> }
           & CatalogFragment
         )> }
       )> }
@@ -158,12 +280,12 @@ export type GetUserByEmailQuery = (
   )> }
 );
 
-export type GetVersionFullByIdQueryVariables = Types.Exact<{
+export type VersionFullByIdQueryVariables = Types.Exact<{
   id: Types.Scalars['Int'];
 }>;
 
 
-export type GetVersionFullByIdQuery = (
+export type VersionFullByIdQuery = (
   { __typename?: 'Query' }
   & { version?: Types.Maybe<(
     { __typename?: 'Version' }
@@ -172,25 +294,25 @@ export type GetVersionFullByIdQuery = (
       & Pick<Types.ProductsByVersion, 'sku'>
     )>, pages: Array<(
       { __typename?: 'Page' }
-      & Pick<Types.Page, 'oid' | 'imageSource' | 'imageUrl' | 'pageType' | 'options'>
+      & PageFragment
     )>, catalog?: Types.Maybe<(
       { __typename?: 'Catalog' }
       & { products: Array<(
         { __typename?: 'Product' }
         & ProductFragment
       )> }
-      & CatalogLiteFragment
+      & CatalogFragment
     )> }
-    & VersionLiteFragment
+    & VersionFragment
   )> }
 );
 
-export type GetProductsByVersionIdQueryVariables = Types.Exact<{
+export type ProductsByVersionIdQueryVariables = Types.Exact<{
   id: Types.Scalars['Int'];
 }>;
 
 
-export type GetProductsByVersionIdQuery = (
+export type ProductsByVersionIdQuery = (
   { __typename?: 'Query' }
   & { version?: Types.Maybe<(
     { __typename?: 'Version' }
@@ -206,29 +328,32 @@ export type GetProductsByVersionIdQuery = (
   )> }
 );
 
-export type GetActiveVersionByCatalogIdQueryVariables = Types.Exact<{
+export type ActiveVersionByCatalogIdQueryVariables = Types.Exact<{
   id: Types.Scalars['Int'];
 }>;
 
 
-export type GetActiveVersionByCatalogIdQuery = (
+export type ActiveVersionByCatalogIdQuery = (
   { __typename?: 'Query' }
   & { catalog?: Types.Maybe<(
     { __typename?: 'Catalog' }
-    & { activeVersion?: Types.Maybe<(
+    & { account?: Types.Maybe<(
+      { __typename?: 'Account' }
+      & Pick<Types.Account, 'logo' | 'name' | 'active'>
+    )>, activeVersion?: Types.Maybe<(
       { __typename?: 'Version' }
-      & VersionLiteFragment
+      & VersionFragment
     )> }
-    & CatalogLiteFragment
+    & CatalogFragment
   )> }
 );
 
-export type GetProductsCatalogQueryVariables = Types.Exact<{
+export type ProductsCatalogQueryVariables = Types.Exact<{
   oid: Types.Scalars['UUID'];
 }>;
 
 
-export type GetProductsCatalogQuery = (
+export type ProductsCatalogQuery = (
   { __typename?: 'Query' }
   & { catalog?: Types.Maybe<(
     { __typename?: 'Catalog' }
@@ -240,12 +365,12 @@ export type GetProductsCatalogQuery = (
   )> }
 );
 
-export type GetProductsByCatalogIdQueryVariables = Types.Exact<{
+export type ProductsByCatalogIdQueryVariables = Types.Exact<{
   id: Types.Scalars['Int'];
 }>;
 
 
-export type GetProductsByCatalogIdQuery = (
+export type ProductsByCatalogIdQuery = (
   { __typename?: 'Query' }
   & { catalog?: Types.Maybe<(
     { __typename?: 'Catalog' }
@@ -257,12 +382,12 @@ export type GetProductsByCatalogIdQuery = (
   )> }
 );
 
-export type GetCategoriesByCatalogIdQueryVariables = Types.Exact<{
+export type CategoriesByCatalogIdQueryVariables = Types.Exact<{
   oid: Types.Scalars['UUID'];
 }>;
 
 
-export type GetCategoriesByCatalogIdQuery = (
+export type CategoriesByCatalogIdQuery = (
   { __typename?: 'Query' }
   & { catalog?: Types.Maybe<(
     { __typename?: 'Catalog' }
@@ -274,12 +399,12 @@ export type GetCategoriesByCatalogIdQuery = (
   )> }
 );
 
-export type GetCatalogCategoriesQueryVariables = Types.Exact<{
+export type CatalogCategoriesQueryVariables = Types.Exact<{
   id: Types.Scalars['Int'];
 }>;
 
 
-export type GetCatalogCategoriesQuery = (
+export type CatalogCategoriesQuery = (
   { __typename?: 'Query' }
   & { catalog?: Types.Maybe<(
     { __typename?: 'Catalog' }
@@ -291,12 +416,12 @@ export type GetCatalogCategoriesQuery = (
   )> }
 );
 
-export type GetCategoriesByVersionIdQueryVariables = Types.Exact<{
+export type CategoriesByVersionIdQueryVariables = Types.Exact<{
   id: Types.Scalars['Int'];
 }>;
 
 
-export type GetCategoriesByVersionIdQuery = (
+export type CategoriesByVersionIdQuery = (
   { __typename?: 'Query' }
   & { version?: Types.Maybe<(
     { __typename?: 'Version' }
@@ -312,12 +437,12 @@ export type GetCategoriesByVersionIdQuery = (
   )> }
 );
 
-export type GetLeadsAccountQueryVariables = Types.Exact<{
+export type LeadsAccountQueryVariables = Types.Exact<{
   account: Types.Scalars['UUID'];
 }>;
 
 
-export type GetLeadsAccountQuery = (
+export type LeadsAccountQuery = (
   { __typename?: 'Query' }
   & { leads?: Types.Maybe<Array<(
     { __typename?: 'Lead' }
@@ -357,6 +482,16 @@ export type CreateCatalogMutation = (
     { __typename?: 'CreateCatalogPayload' }
     & { catalog?: Types.Maybe<(
       { __typename?: 'Catalog' }
+      & { account?: Types.Maybe<(
+        { __typename?: 'Account' }
+        & Pick<Types.Account, 'logo' | 'name' | 'active'>
+      )>, activeVersion?: Types.Maybe<(
+        { __typename?: 'Version' }
+        & VersionFragment
+      )>, versions: Array<(
+        { __typename?: 'Version' }
+        & VersionFragment
+      )> }
       & CatalogFragment
     )> }
   )> }
@@ -374,6 +509,13 @@ export type UpdateCatalogMutation = (
     { __typename?: 'UpdateCatalogPayload' }
     & { catalog?: Types.Maybe<(
       { __typename?: 'Catalog' }
+      & { activeVersion?: Types.Maybe<(
+        { __typename?: 'Version' }
+        & VersionFragment
+      )>, versions: Array<(
+        { __typename?: 'Version' }
+        & VersionFragment
+      )> }
       & CatalogFragment
     )> }
   )> }
@@ -406,6 +548,10 @@ export type CreateVersionMutation = (
     { __typename?: 'CreateVersionPayload' }
     & { version?: Types.Maybe<(
       { __typename?: 'Version' }
+      & { catalog?: Types.Maybe<(
+        { __typename?: 'Catalog' }
+        & CatalogFragment
+      )> }
       & VersionFragment
     )> }
   )> }
@@ -423,6 +569,10 @@ export type UpdateVersionMutation = (
     { __typename?: 'UpdateVersionPayload' }
     & { version?: Types.Maybe<(
       { __typename?: 'Version' }
+      & { catalog?: Types.Maybe<(
+        { __typename?: 'Catalog' }
+        & CatalogFragment
+      )> }
       & VersionFragment
     )> }
   )> }
@@ -477,10 +627,10 @@ export type DeletePageMutation = (
   )> }
 );
 
-export type GetCatalogFeedsQueryVariables = Types.Exact<{ [key: string]: never; }>;
+export type CatalogFeedsQueryVariables = Types.Exact<{ [key: string]: never; }>;
 
 
-export type GetCatalogFeedsQuery = (
+export type CatalogFeedsQuery = (
   { __typename?: 'Query' }
   & { feeds?: Types.Maybe<Array<(
     { __typename?: 'Feed' }
@@ -635,6 +785,38 @@ export type DeleteProductMutation = (
   )> }
 );
 
+export const CatalogFragmentDoc = gql`
+    fragment Catalog on Catalog {
+  id
+  oid
+  name
+  title
+  merchantId
+  customSubdomain
+  text2Disclaimer
+  options
+  description
+}
+    `;
+export const ProductFragmentDoc = gql`
+    fragment Product on Product {
+  src
+  additionalImages
+  sku
+  category
+  tags
+  title
+  description
+  tags
+  url
+  price
+  salePrice
+  options
+  oid
+  expired
+  status
+}
+    `;
 export const PageFragmentDoc = gql`
     fragment Page on Page {
   oid
@@ -660,25 +842,8 @@ export const FeedFragmentDoc = gql`
   }
 }
     `;
-export const CatalogLiteFragmentDoc = gql`
-    fragment CatalogLite on Catalog {
-  id
-  oid
-  name
-  merchantId
-  customSubdomain
-  text2Disclaimer
-  options
-  description
-  account: accountByAccount {
-    logo
-    name
-    active
-  }
-}
-    `;
-export const VersionLiteFragmentDoc = gql`
-    fragment VersionLite on Version {
+export const VersionFragmentDoc = gql`
+    fragment Version on Version {
   id
   oid
   name
@@ -688,29 +853,9 @@ export const VersionLiteFragmentDoc = gql`
   description
   options
   versionNo
+  order
 }
     `;
-export const CatalogFragmentDoc = gql`
-    fragment Catalog on Catalog {
-  ...CatalogLite
-  activeVersion: versionByActiveVersion {
-    ...VersionLite
-  }
-  versions: versionsByCatalog(orderBy: ID_DESC, offset: 0) {
-    ...VersionLite
-  }
-}
-    ${CatalogLiteFragmentDoc}
-${VersionLiteFragmentDoc}`;
-export const VersionFragmentDoc = gql`
-    fragment Version on Version {
-  ...VersionLite
-  catalog: catalogByCatalog {
-    ...CatalogLite
-  }
-}
-    ${VersionLiteFragmentDoc}
-${CatalogLiteFragmentDoc}`;
 export const CategoryFragmentDoc = gql`
     fragment Category on Category {
   id
@@ -720,31 +865,197 @@ export const CategoryFragmentDoc = gql`
   options
   subcategories: subCategoriesByCategory {
     id
-    oid
     name
     image
-    options
+    parent: categoryByCategory {
+      name
+    }
   }
 }
     `;
-export const ProductFragmentDoc = gql`
-    fragment Product on Product {
-  oid
-  sku
-  title
-  price
-  url
-  src
-  category
-  brand
-  tags
-  color
-  expired
-  options
+export const ProductBySkuDocument = gql`
+    query ProductBySku($sku: String!, $catalog: UUID!) {
+  products(condition: {sku: $sku, catalog: $catalog}) {
+    ...Product
+  }
 }
-    `;
-export const GetActiveAccountsDocument = gql`
-    query GetActiveAccounts {
+    ${ProductFragmentDoc}`;
+
+/**
+ * __useProductBySkuQuery__
+ *
+ * To run a query within a React component, call `useProductBySkuQuery` and pass it any options that fit your needs.
+ * When your component renders, `useProductBySkuQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useProductBySkuQuery({
+ *   variables: {
+ *      sku: // value for 'sku'
+ *      catalog: // value for 'catalog'
+ *   },
+ * });
+ */
+export function useProductBySkuQuery(baseOptions?: Apollo.QueryHookOptions<ProductBySkuQuery, ProductBySkuQueryVariables>) {
+        return Apollo.useQuery<ProductBySkuQuery, ProductBySkuQueryVariables>(ProductBySkuDocument, baseOptions);
+      }
+export function useProductBySkuLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ProductBySkuQuery, ProductBySkuQueryVariables>) {
+          return Apollo.useLazyQuery<ProductBySkuQuery, ProductBySkuQueryVariables>(ProductBySkuDocument, baseOptions);
+        }
+export type ProductBySkuQueryHookResult = ReturnType<typeof useProductBySkuQuery>;
+export type ProductBySkuLazyQueryHookResult = ReturnType<typeof useProductBySkuLazyQuery>;
+export type ProductBySkuQueryResult = Apollo.QueryResult<ProductBySkuQuery, ProductBySkuQueryVariables>;
+export function refetchProductBySkuQuery(variables?: ProductBySkuQueryVariables) {
+      return { query: ProductBySkuDocument, variables: variables }
+    }
+export const FullCatalogByIdDocument = gql`
+    query FullCatalogById($id: Int!) {
+  catalog: catalogById(id: $id) {
+    ...Catalog
+    products: productsByCatalog {
+      ...Product
+    }
+    categories: categoriesByCatalog {
+      ...Category
+      products: subProductsByMainAndCatalog {
+        sku
+        sub
+        main
+      }
+    }
+    version: versionByActiveVersion {
+      ...Version
+      pages: pagesByVersion {
+        ...Page
+      }
+    }
+    account: accountByAccount {
+      logo
+      name
+      catalogs: catalogsByAccount {
+        id
+        oid
+        merchantId
+        activeVersion: versionByActiveVersion {
+          id
+          oid
+          name
+          coverUrl
+        }
+      }
+    }
+  }
+}
+    ${CatalogFragmentDoc}
+${ProductFragmentDoc}
+${CategoryFragmentDoc}
+${VersionFragmentDoc}
+${PageFragmentDoc}`;
+
+/**
+ * __useFullCatalogByIdQuery__
+ *
+ * To run a query within a React component, call `useFullCatalogByIdQuery` and pass it any options that fit your needs.
+ * When your component renders, `useFullCatalogByIdQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useFullCatalogByIdQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useFullCatalogByIdQuery(baseOptions?: Apollo.QueryHookOptions<FullCatalogByIdQuery, FullCatalogByIdQueryVariables>) {
+        return Apollo.useQuery<FullCatalogByIdQuery, FullCatalogByIdQueryVariables>(FullCatalogByIdDocument, baseOptions);
+      }
+export function useFullCatalogByIdLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<FullCatalogByIdQuery, FullCatalogByIdQueryVariables>) {
+          return Apollo.useLazyQuery<FullCatalogByIdQuery, FullCatalogByIdQueryVariables>(FullCatalogByIdDocument, baseOptions);
+        }
+export type FullCatalogByIdQueryHookResult = ReturnType<typeof useFullCatalogByIdQuery>;
+export type FullCatalogByIdLazyQueryHookResult = ReturnType<typeof useFullCatalogByIdLazyQuery>;
+export type FullCatalogByIdQueryResult = Apollo.QueryResult<FullCatalogByIdQuery, FullCatalogByIdQueryVariables>;
+export function refetchFullCatalogByIdQuery(variables?: FullCatalogByIdQueryVariables) {
+      return { query: FullCatalogByIdDocument, variables: variables }
+    }
+export const FullVersionByIdDocument = gql`
+    query FullVersionById($id: Int!) {
+  version: versionById(id: $id) {
+    ...Version
+    pages: pagesByVersion {
+      ...Page
+    }
+    catalog: catalogByCatalog {
+      ...Catalog
+      products: productsByCatalog {
+        ...Product
+      }
+      categories: categoriesByCatalog {
+        ...Category
+        products: subProductsByMainAndCatalog {
+          sku
+          sub
+          main
+        }
+      }
+      account: accountByAccount {
+        logo
+        name
+        catalogs: catalogsByAccount {
+          id
+          oid
+          merchantId
+          activeVersion: versionByActiveVersion {
+            id
+            oid
+            name
+            coverUrl
+          }
+        }
+      }
+    }
+  }
+}
+    ${VersionFragmentDoc}
+${PageFragmentDoc}
+${CatalogFragmentDoc}
+${ProductFragmentDoc}
+${CategoryFragmentDoc}`;
+
+/**
+ * __useFullVersionByIdQuery__
+ *
+ * To run a query within a React component, call `useFullVersionByIdQuery` and pass it any options that fit your needs.
+ * When your component renders, `useFullVersionByIdQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useFullVersionByIdQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useFullVersionByIdQuery(baseOptions?: Apollo.QueryHookOptions<FullVersionByIdQuery, FullVersionByIdQueryVariables>) {
+        return Apollo.useQuery<FullVersionByIdQuery, FullVersionByIdQueryVariables>(FullVersionByIdDocument, baseOptions);
+      }
+export function useFullVersionByIdLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<FullVersionByIdQuery, FullVersionByIdQueryVariables>) {
+          return Apollo.useLazyQuery<FullVersionByIdQuery, FullVersionByIdQueryVariables>(FullVersionByIdDocument, baseOptions);
+        }
+export type FullVersionByIdQueryHookResult = ReturnType<typeof useFullVersionByIdQuery>;
+export type FullVersionByIdLazyQueryHookResult = ReturnType<typeof useFullVersionByIdLazyQuery>;
+export type FullVersionByIdQueryResult = Apollo.QueryResult<FullVersionByIdQuery, FullVersionByIdQueryVariables>;
+export function refetchFullVersionByIdQuery(variables?: FullVersionByIdQueryVariables) {
+      return { query: FullVersionByIdDocument, variables: variables }
+    }
+export const ActiveAccountsDocument = gql`
+    query ActiveAccounts {
   accounts(condition: {active: true}, orderBy: NAME_ASC) {
     oid
     name
@@ -754,148 +1065,188 @@ export const GetActiveAccountsDocument = gql`
     logo
     catalogs: catalogsByAccount {
       ...Catalog
+      activeVersion: versionByActiveVersion {
+        ...Version
+      }
+      versions: versionsByCatalog(orderBy: ID_DESC, offset: 0) {
+        ...Version
+      }
     }
   }
 }
-    ${CatalogFragmentDoc}`;
+    ${CatalogFragmentDoc}
+${VersionFragmentDoc}`;
 
 /**
- * __useGetActiveAccountsQuery__
+ * __useActiveAccountsQuery__
  *
- * To run a query within a React component, call `useGetActiveAccountsQuery` and pass it any options that fit your needs.
- * When your component renders, `useGetActiveAccountsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * To run a query within a React component, call `useActiveAccountsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useActiveAccountsQuery` returns an object from Apollo Client that contains loading, error, and data properties
  * you can use to render your UI.
  *
  * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
  *
  * @example
- * const { data, loading, error } = useGetActiveAccountsQuery({
+ * const { data, loading, error } = useActiveAccountsQuery({
  *   variables: {
  *   },
  * });
  */
-export function useGetActiveAccountsQuery(baseOptions?: Apollo.QueryHookOptions<GetActiveAccountsQuery, GetActiveAccountsQueryVariables>) {
-        return Apollo.useQuery<GetActiveAccountsQuery, GetActiveAccountsQueryVariables>(GetActiveAccountsDocument, baseOptions);
+export function useActiveAccountsQuery(baseOptions?: Apollo.QueryHookOptions<ActiveAccountsQuery, ActiveAccountsQueryVariables>) {
+        return Apollo.useQuery<ActiveAccountsQuery, ActiveAccountsQueryVariables>(ActiveAccountsDocument, baseOptions);
       }
-export function useGetActiveAccountsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetActiveAccountsQuery, GetActiveAccountsQueryVariables>) {
-          return Apollo.useLazyQuery<GetActiveAccountsQuery, GetActiveAccountsQueryVariables>(GetActiveAccountsDocument, baseOptions);
+export function useActiveAccountsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ActiveAccountsQuery, ActiveAccountsQueryVariables>) {
+          return Apollo.useLazyQuery<ActiveAccountsQuery, ActiveAccountsQueryVariables>(ActiveAccountsDocument, baseOptions);
         }
-export type GetActiveAccountsQueryHookResult = ReturnType<typeof useGetActiveAccountsQuery>;
-export type GetActiveAccountsLazyQueryHookResult = ReturnType<typeof useGetActiveAccountsLazyQuery>;
-export type GetActiveAccountsQueryResult = Apollo.QueryResult<GetActiveAccountsQuery, GetActiveAccountsQueryVariables>;
-export function refetchGetActiveAccountsQuery(variables?: GetActiveAccountsQueryVariables) {
-      return { query: GetActiveAccountsDocument, variables: variables }
+export type ActiveAccountsQueryHookResult = ReturnType<typeof useActiveAccountsQuery>;
+export type ActiveAccountsLazyQueryHookResult = ReturnType<typeof useActiveAccountsLazyQuery>;
+export type ActiveAccountsQueryResult = Apollo.QueryResult<ActiveAccountsQuery, ActiveAccountsQueryVariables>;
+export function refetchActiveAccountsQuery(variables?: ActiveAccountsQueryVariables) {
+      return { query: ActiveAccountsDocument, variables: variables }
     }
-export const GetCatalogByOidDocument = gql`
-    query GetCatalogByOid($oid: UUID!) {
+export const CatalogByOidDocument = gql`
+    query CatalogByOid($oid: UUID!) {
   catalog(oid: $oid) {
     ...Catalog
+    account: accountByAccount {
+      logo
+      name
+      active
+    }
+    activeVersion: versionByActiveVersion {
+      ...Version
+    }
+    versions: versionsByCatalog(orderBy: ID_DESC, offset: 0) {
+      ...Version
+    }
   }
 }
-    ${CatalogFragmentDoc}`;
+    ${CatalogFragmentDoc}
+${VersionFragmentDoc}`;
 
 /**
- * __useGetCatalogByOidQuery__
+ * __useCatalogByOidQuery__
  *
- * To run a query within a React component, call `useGetCatalogByOidQuery` and pass it any options that fit your needs.
- * When your component renders, `useGetCatalogByOidQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * To run a query within a React component, call `useCatalogByOidQuery` and pass it any options that fit your needs.
+ * When your component renders, `useCatalogByOidQuery` returns an object from Apollo Client that contains loading, error, and data properties
  * you can use to render your UI.
  *
  * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
  *
  * @example
- * const { data, loading, error } = useGetCatalogByOidQuery({
+ * const { data, loading, error } = useCatalogByOidQuery({
  *   variables: {
  *      oid: // value for 'oid'
  *   },
  * });
  */
-export function useGetCatalogByOidQuery(baseOptions?: Apollo.QueryHookOptions<GetCatalogByOidQuery, GetCatalogByOidQueryVariables>) {
-        return Apollo.useQuery<GetCatalogByOidQuery, GetCatalogByOidQueryVariables>(GetCatalogByOidDocument, baseOptions);
+export function useCatalogByOidQuery(baseOptions?: Apollo.QueryHookOptions<CatalogByOidQuery, CatalogByOidQueryVariables>) {
+        return Apollo.useQuery<CatalogByOidQuery, CatalogByOidQueryVariables>(CatalogByOidDocument, baseOptions);
       }
-export function useGetCatalogByOidLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetCatalogByOidQuery, GetCatalogByOidQueryVariables>) {
-          return Apollo.useLazyQuery<GetCatalogByOidQuery, GetCatalogByOidQueryVariables>(GetCatalogByOidDocument, baseOptions);
+export function useCatalogByOidLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<CatalogByOidQuery, CatalogByOidQueryVariables>) {
+          return Apollo.useLazyQuery<CatalogByOidQuery, CatalogByOidQueryVariables>(CatalogByOidDocument, baseOptions);
         }
-export type GetCatalogByOidQueryHookResult = ReturnType<typeof useGetCatalogByOidQuery>;
-export type GetCatalogByOidLazyQueryHookResult = ReturnType<typeof useGetCatalogByOidLazyQuery>;
-export type GetCatalogByOidQueryResult = Apollo.QueryResult<GetCatalogByOidQuery, GetCatalogByOidQueryVariables>;
-export function refetchGetCatalogByOidQuery(variables?: GetCatalogByOidQueryVariables) {
-      return { query: GetCatalogByOidDocument, variables: variables }
+export type CatalogByOidQueryHookResult = ReturnType<typeof useCatalogByOidQuery>;
+export type CatalogByOidLazyQueryHookResult = ReturnType<typeof useCatalogByOidLazyQuery>;
+export type CatalogByOidQueryResult = Apollo.QueryResult<CatalogByOidQuery, CatalogByOidQueryVariables>;
+export function refetchCatalogByOidQuery(variables?: CatalogByOidQueryVariables) {
+      return { query: CatalogByOidDocument, variables: variables }
     }
-export const GetCatalogByVersionIdDocument = gql`
-    query GetCatalogByVersionId($id: Int!) {
+export const CatalogByVersionIdDocument = gql`
+    query CatalogByVersionId($id: Int!) {
   version: versionById(id: $id) {
     ...Version
+    catalog: catalogByCatalog {
+      ...Catalog
+      account: accountByAccount {
+        logo
+        name
+        active
+      }
+    }
   }
 }
-    ${VersionFragmentDoc}`;
+    ${VersionFragmentDoc}
+${CatalogFragmentDoc}`;
 
 /**
- * __useGetCatalogByVersionIdQuery__
+ * __useCatalogByVersionIdQuery__
  *
- * To run a query within a React component, call `useGetCatalogByVersionIdQuery` and pass it any options that fit your needs.
- * When your component renders, `useGetCatalogByVersionIdQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * To run a query within a React component, call `useCatalogByVersionIdQuery` and pass it any options that fit your needs.
+ * When your component renders, `useCatalogByVersionIdQuery` returns an object from Apollo Client that contains loading, error, and data properties
  * you can use to render your UI.
  *
  * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
  *
  * @example
- * const { data, loading, error } = useGetCatalogByVersionIdQuery({
+ * const { data, loading, error } = useCatalogByVersionIdQuery({
  *   variables: {
  *      id: // value for 'id'
  *   },
  * });
  */
-export function useGetCatalogByVersionIdQuery(baseOptions?: Apollo.QueryHookOptions<GetCatalogByVersionIdQuery, GetCatalogByVersionIdQueryVariables>) {
-        return Apollo.useQuery<GetCatalogByVersionIdQuery, GetCatalogByVersionIdQueryVariables>(GetCatalogByVersionIdDocument, baseOptions);
+export function useCatalogByVersionIdQuery(baseOptions?: Apollo.QueryHookOptions<CatalogByVersionIdQuery, CatalogByVersionIdQueryVariables>) {
+        return Apollo.useQuery<CatalogByVersionIdQuery, CatalogByVersionIdQueryVariables>(CatalogByVersionIdDocument, baseOptions);
       }
-export function useGetCatalogByVersionIdLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetCatalogByVersionIdQuery, GetCatalogByVersionIdQueryVariables>) {
-          return Apollo.useLazyQuery<GetCatalogByVersionIdQuery, GetCatalogByVersionIdQueryVariables>(GetCatalogByVersionIdDocument, baseOptions);
+export function useCatalogByVersionIdLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<CatalogByVersionIdQuery, CatalogByVersionIdQueryVariables>) {
+          return Apollo.useLazyQuery<CatalogByVersionIdQuery, CatalogByVersionIdQueryVariables>(CatalogByVersionIdDocument, baseOptions);
         }
-export type GetCatalogByVersionIdQueryHookResult = ReturnType<typeof useGetCatalogByVersionIdQuery>;
-export type GetCatalogByVersionIdLazyQueryHookResult = ReturnType<typeof useGetCatalogByVersionIdLazyQuery>;
-export type GetCatalogByVersionIdQueryResult = Apollo.QueryResult<GetCatalogByVersionIdQuery, GetCatalogByVersionIdQueryVariables>;
-export function refetchGetCatalogByVersionIdQuery(variables?: GetCatalogByVersionIdQueryVariables) {
-      return { query: GetCatalogByVersionIdDocument, variables: variables }
+export type CatalogByVersionIdQueryHookResult = ReturnType<typeof useCatalogByVersionIdQuery>;
+export type CatalogByVersionIdLazyQueryHookResult = ReturnType<typeof useCatalogByVersionIdLazyQuery>;
+export type CatalogByVersionIdQueryResult = Apollo.QueryResult<CatalogByVersionIdQuery, CatalogByVersionIdQueryVariables>;
+export function refetchCatalogByVersionIdQuery(variables?: CatalogByVersionIdQueryVariables) {
+      return { query: CatalogByVersionIdDocument, variables: variables }
     }
-export const GetCatalogByIdDocument = gql`
-    query GetCatalogById($id: Int!) {
+export const CatalogByIdDocument = gql`
+    query CatalogById($id: Int!) {
   catalog: catalogById(id: $id) {
     ...Catalog
+    account: accountByAccount {
+      logo
+      name
+      active
+    }
+    activeVersion: versionByActiveVersion {
+      ...Version
+    }
+    versions: versionsByCatalog(orderBy: ID_DESC, offset: 0) {
+      ...Version
+    }
   }
 }
-    ${CatalogFragmentDoc}`;
+    ${CatalogFragmentDoc}
+${VersionFragmentDoc}`;
 
 /**
- * __useGetCatalogByIdQuery__
+ * __useCatalogByIdQuery__
  *
- * To run a query within a React component, call `useGetCatalogByIdQuery` and pass it any options that fit your needs.
- * When your component renders, `useGetCatalogByIdQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * To run a query within a React component, call `useCatalogByIdQuery` and pass it any options that fit your needs.
+ * When your component renders, `useCatalogByIdQuery` returns an object from Apollo Client that contains loading, error, and data properties
  * you can use to render your UI.
  *
  * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
  *
  * @example
- * const { data, loading, error } = useGetCatalogByIdQuery({
+ * const { data, loading, error } = useCatalogByIdQuery({
  *   variables: {
  *      id: // value for 'id'
  *   },
  * });
  */
-export function useGetCatalogByIdQuery(baseOptions?: Apollo.QueryHookOptions<GetCatalogByIdQuery, GetCatalogByIdQueryVariables>) {
-        return Apollo.useQuery<GetCatalogByIdQuery, GetCatalogByIdQueryVariables>(GetCatalogByIdDocument, baseOptions);
+export function useCatalogByIdQuery(baseOptions?: Apollo.QueryHookOptions<CatalogByIdQuery, CatalogByIdQueryVariables>) {
+        return Apollo.useQuery<CatalogByIdQuery, CatalogByIdQueryVariables>(CatalogByIdDocument, baseOptions);
       }
-export function useGetCatalogByIdLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetCatalogByIdQuery, GetCatalogByIdQueryVariables>) {
-          return Apollo.useLazyQuery<GetCatalogByIdQuery, GetCatalogByIdQueryVariables>(GetCatalogByIdDocument, baseOptions);
+export function useCatalogByIdLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<CatalogByIdQuery, CatalogByIdQueryVariables>) {
+          return Apollo.useLazyQuery<CatalogByIdQuery, CatalogByIdQueryVariables>(CatalogByIdDocument, baseOptions);
         }
-export type GetCatalogByIdQueryHookResult = ReturnType<typeof useGetCatalogByIdQuery>;
-export type GetCatalogByIdLazyQueryHookResult = ReturnType<typeof useGetCatalogByIdLazyQuery>;
-export type GetCatalogByIdQueryResult = Apollo.QueryResult<GetCatalogByIdQuery, GetCatalogByIdQueryVariables>;
-export function refetchGetCatalogByIdQuery(variables?: GetCatalogByIdQueryVariables) {
-      return { query: GetCatalogByIdDocument, variables: variables }
+export type CatalogByIdQueryHookResult = ReturnType<typeof useCatalogByIdQuery>;
+export type CatalogByIdLazyQueryHookResult = ReturnType<typeof useCatalogByIdLazyQuery>;
+export type CatalogByIdQueryResult = Apollo.QueryResult<CatalogByIdQuery, CatalogByIdQueryVariables>;
+export function refetchCatalogByIdQuery(variables?: CatalogByIdQueryVariables) {
+      return { query: CatalogByIdDocument, variables: variables }
     }
-export const GetAllAuthorizedUsersDocument = gql`
-    query GetAllAuthorizedUsers {
+export const AllAuthorizedUsersDocument = gql`
+    query AllAuthorizedUsers {
   authorizedUsers {
     oid
     email
@@ -907,34 +1258,34 @@ export const GetAllAuthorizedUsersDocument = gql`
     `;
 
 /**
- * __useGetAllAuthorizedUsersQuery__
+ * __useAllAuthorizedUsersQuery__
  *
- * To run a query within a React component, call `useGetAllAuthorizedUsersQuery` and pass it any options that fit your needs.
- * When your component renders, `useGetAllAuthorizedUsersQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * To run a query within a React component, call `useAllAuthorizedUsersQuery` and pass it any options that fit your needs.
+ * When your component renders, `useAllAuthorizedUsersQuery` returns an object from Apollo Client that contains loading, error, and data properties
  * you can use to render your UI.
  *
  * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
  *
  * @example
- * const { data, loading, error } = useGetAllAuthorizedUsersQuery({
+ * const { data, loading, error } = useAllAuthorizedUsersQuery({
  *   variables: {
  *   },
  * });
  */
-export function useGetAllAuthorizedUsersQuery(baseOptions?: Apollo.QueryHookOptions<GetAllAuthorizedUsersQuery, GetAllAuthorizedUsersQueryVariables>) {
-        return Apollo.useQuery<GetAllAuthorizedUsersQuery, GetAllAuthorizedUsersQueryVariables>(GetAllAuthorizedUsersDocument, baseOptions);
+export function useAllAuthorizedUsersQuery(baseOptions?: Apollo.QueryHookOptions<AllAuthorizedUsersQuery, AllAuthorizedUsersQueryVariables>) {
+        return Apollo.useQuery<AllAuthorizedUsersQuery, AllAuthorizedUsersQueryVariables>(AllAuthorizedUsersDocument, baseOptions);
       }
-export function useGetAllAuthorizedUsersLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetAllAuthorizedUsersQuery, GetAllAuthorizedUsersQueryVariables>) {
-          return Apollo.useLazyQuery<GetAllAuthorizedUsersQuery, GetAllAuthorizedUsersQueryVariables>(GetAllAuthorizedUsersDocument, baseOptions);
+export function useAllAuthorizedUsersLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<AllAuthorizedUsersQuery, AllAuthorizedUsersQueryVariables>) {
+          return Apollo.useLazyQuery<AllAuthorizedUsersQuery, AllAuthorizedUsersQueryVariables>(AllAuthorizedUsersDocument, baseOptions);
         }
-export type GetAllAuthorizedUsersQueryHookResult = ReturnType<typeof useGetAllAuthorizedUsersQuery>;
-export type GetAllAuthorizedUsersLazyQueryHookResult = ReturnType<typeof useGetAllAuthorizedUsersLazyQuery>;
-export type GetAllAuthorizedUsersQueryResult = Apollo.QueryResult<GetAllAuthorizedUsersQuery, GetAllAuthorizedUsersQueryVariables>;
-export function refetchGetAllAuthorizedUsersQuery(variables?: GetAllAuthorizedUsersQueryVariables) {
-      return { query: GetAllAuthorizedUsersDocument, variables: variables }
+export type AllAuthorizedUsersQueryHookResult = ReturnType<typeof useAllAuthorizedUsersQuery>;
+export type AllAuthorizedUsersLazyQueryHookResult = ReturnType<typeof useAllAuthorizedUsersLazyQuery>;
+export type AllAuthorizedUsersQueryResult = Apollo.QueryResult<AllAuthorizedUsersQuery, AllAuthorizedUsersQueryVariables>;
+export function refetchAllAuthorizedUsersQuery(variables?: AllAuthorizedUsersQueryVariables) {
+      return { query: AllAuthorizedUsersDocument, variables: variables }
     }
-export const GetUserByEmailDocument = gql`
-    query GetUserByEmail($email: String!) {
+export const UserByEmailDocument = gql`
+    query UserByEmail($email: String!) {
   user: authorizedUserByEmail(email: $email) {
     oid
     email
@@ -946,97 +1297,106 @@ export const GetUserByEmailDocument = gql`
         active
         catalogs: catalogsByAccount {
           ...Catalog
+          account: accountByAccount {
+            logo
+            name
+            active
+          }
+          activeVersion: versionByActiveVersion {
+            ...Version
+          }
+          versions: versionsByCatalog(orderBy: ID_DESC, offset: 0) {
+            ...Version
+          }
         }
       }
     }
   }
 }
-    ${CatalogFragmentDoc}`;
+    ${CatalogFragmentDoc}
+${VersionFragmentDoc}`;
 
 /**
- * __useGetUserByEmailQuery__
+ * __useUserByEmailQuery__
  *
- * To run a query within a React component, call `useGetUserByEmailQuery` and pass it any options that fit your needs.
- * When your component renders, `useGetUserByEmailQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * To run a query within a React component, call `useUserByEmailQuery` and pass it any options that fit your needs.
+ * When your component renders, `useUserByEmailQuery` returns an object from Apollo Client that contains loading, error, and data properties
  * you can use to render your UI.
  *
  * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
  *
  * @example
- * const { data, loading, error } = useGetUserByEmailQuery({
+ * const { data, loading, error } = useUserByEmailQuery({
  *   variables: {
  *      email: // value for 'email'
  *   },
  * });
  */
-export function useGetUserByEmailQuery(baseOptions?: Apollo.QueryHookOptions<GetUserByEmailQuery, GetUserByEmailQueryVariables>) {
-        return Apollo.useQuery<GetUserByEmailQuery, GetUserByEmailQueryVariables>(GetUserByEmailDocument, baseOptions);
+export function useUserByEmailQuery(baseOptions?: Apollo.QueryHookOptions<UserByEmailQuery, UserByEmailQueryVariables>) {
+        return Apollo.useQuery<UserByEmailQuery, UserByEmailQueryVariables>(UserByEmailDocument, baseOptions);
       }
-export function useGetUserByEmailLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetUserByEmailQuery, GetUserByEmailQueryVariables>) {
-          return Apollo.useLazyQuery<GetUserByEmailQuery, GetUserByEmailQueryVariables>(GetUserByEmailDocument, baseOptions);
+export function useUserByEmailLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<UserByEmailQuery, UserByEmailQueryVariables>) {
+          return Apollo.useLazyQuery<UserByEmailQuery, UserByEmailQueryVariables>(UserByEmailDocument, baseOptions);
         }
-export type GetUserByEmailQueryHookResult = ReturnType<typeof useGetUserByEmailQuery>;
-export type GetUserByEmailLazyQueryHookResult = ReturnType<typeof useGetUserByEmailLazyQuery>;
-export type GetUserByEmailQueryResult = Apollo.QueryResult<GetUserByEmailQuery, GetUserByEmailQueryVariables>;
-export function refetchGetUserByEmailQuery(variables?: GetUserByEmailQueryVariables) {
-      return { query: GetUserByEmailDocument, variables: variables }
+export type UserByEmailQueryHookResult = ReturnType<typeof useUserByEmailQuery>;
+export type UserByEmailLazyQueryHookResult = ReturnType<typeof useUserByEmailLazyQuery>;
+export type UserByEmailQueryResult = Apollo.QueryResult<UserByEmailQuery, UserByEmailQueryVariables>;
+export function refetchUserByEmailQuery(variables?: UserByEmailQueryVariables) {
+      return { query: UserByEmailDocument, variables: variables }
     }
-export const GetVersionFullByIdDocument = gql`
-    query GetVersionFullById($id: Int!) {
+export const VersionFullByIdDocument = gql`
+    query VersionFullById($id: Int!) {
   version: versionById(id: $id) {
-    ...VersionLite
+    ...Version
     products: productsByVersionsByVersionOid {
       sku
     }
     pages: pagesByVersion {
-      oid
-      imageSource
-      imageUrl
-      pageType
-      options
+      ...Page
     }
     catalog: catalogByCatalog {
-      ...CatalogLite
+      ...Catalog
       products: productsByCatalog {
         ...Product
       }
     }
   }
 }
-    ${VersionLiteFragmentDoc}
-${CatalogLiteFragmentDoc}
+    ${VersionFragmentDoc}
+${PageFragmentDoc}
+${CatalogFragmentDoc}
 ${ProductFragmentDoc}`;
 
 /**
- * __useGetVersionFullByIdQuery__
+ * __useVersionFullByIdQuery__
  *
- * To run a query within a React component, call `useGetVersionFullByIdQuery` and pass it any options that fit your needs.
- * When your component renders, `useGetVersionFullByIdQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * To run a query within a React component, call `useVersionFullByIdQuery` and pass it any options that fit your needs.
+ * When your component renders, `useVersionFullByIdQuery` returns an object from Apollo Client that contains loading, error, and data properties
  * you can use to render your UI.
  *
  * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
  *
  * @example
- * const { data, loading, error } = useGetVersionFullByIdQuery({
+ * const { data, loading, error } = useVersionFullByIdQuery({
  *   variables: {
  *      id: // value for 'id'
  *   },
  * });
  */
-export function useGetVersionFullByIdQuery(baseOptions?: Apollo.QueryHookOptions<GetVersionFullByIdQuery, GetVersionFullByIdQueryVariables>) {
-        return Apollo.useQuery<GetVersionFullByIdQuery, GetVersionFullByIdQueryVariables>(GetVersionFullByIdDocument, baseOptions);
+export function useVersionFullByIdQuery(baseOptions?: Apollo.QueryHookOptions<VersionFullByIdQuery, VersionFullByIdQueryVariables>) {
+        return Apollo.useQuery<VersionFullByIdQuery, VersionFullByIdQueryVariables>(VersionFullByIdDocument, baseOptions);
       }
-export function useGetVersionFullByIdLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetVersionFullByIdQuery, GetVersionFullByIdQueryVariables>) {
-          return Apollo.useLazyQuery<GetVersionFullByIdQuery, GetVersionFullByIdQueryVariables>(GetVersionFullByIdDocument, baseOptions);
+export function useVersionFullByIdLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<VersionFullByIdQuery, VersionFullByIdQueryVariables>) {
+          return Apollo.useLazyQuery<VersionFullByIdQuery, VersionFullByIdQueryVariables>(VersionFullByIdDocument, baseOptions);
         }
-export type GetVersionFullByIdQueryHookResult = ReturnType<typeof useGetVersionFullByIdQuery>;
-export type GetVersionFullByIdLazyQueryHookResult = ReturnType<typeof useGetVersionFullByIdLazyQuery>;
-export type GetVersionFullByIdQueryResult = Apollo.QueryResult<GetVersionFullByIdQuery, GetVersionFullByIdQueryVariables>;
-export function refetchGetVersionFullByIdQuery(variables?: GetVersionFullByIdQueryVariables) {
-      return { query: GetVersionFullByIdDocument, variables: variables }
+export type VersionFullByIdQueryHookResult = ReturnType<typeof useVersionFullByIdQuery>;
+export type VersionFullByIdLazyQueryHookResult = ReturnType<typeof useVersionFullByIdLazyQuery>;
+export type VersionFullByIdQueryResult = Apollo.QueryResult<VersionFullByIdQuery, VersionFullByIdQueryVariables>;
+export function refetchVersionFullByIdQuery(variables?: VersionFullByIdQueryVariables) {
+      return { query: VersionFullByIdDocument, variables: variables }
     }
-export const GetProductsByVersionIdDocument = gql`
-    query GetProductsByVersionId($id: Int!) {
+export const ProductsByVersionIdDocument = gql`
+    query ProductsByVersionId($id: Int!) {
   version: versionById(id: $id) {
     id
     oid
@@ -1053,75 +1413,80 @@ export const GetProductsByVersionIdDocument = gql`
     ${ProductFragmentDoc}`;
 
 /**
- * __useGetProductsByVersionIdQuery__
+ * __useProductsByVersionIdQuery__
  *
- * To run a query within a React component, call `useGetProductsByVersionIdQuery` and pass it any options that fit your needs.
- * When your component renders, `useGetProductsByVersionIdQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * To run a query within a React component, call `useProductsByVersionIdQuery` and pass it any options that fit your needs.
+ * When your component renders, `useProductsByVersionIdQuery` returns an object from Apollo Client that contains loading, error, and data properties
  * you can use to render your UI.
  *
  * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
  *
  * @example
- * const { data, loading, error } = useGetProductsByVersionIdQuery({
+ * const { data, loading, error } = useProductsByVersionIdQuery({
  *   variables: {
  *      id: // value for 'id'
  *   },
  * });
  */
-export function useGetProductsByVersionIdQuery(baseOptions?: Apollo.QueryHookOptions<GetProductsByVersionIdQuery, GetProductsByVersionIdQueryVariables>) {
-        return Apollo.useQuery<GetProductsByVersionIdQuery, GetProductsByVersionIdQueryVariables>(GetProductsByVersionIdDocument, baseOptions);
+export function useProductsByVersionIdQuery(baseOptions?: Apollo.QueryHookOptions<ProductsByVersionIdQuery, ProductsByVersionIdQueryVariables>) {
+        return Apollo.useQuery<ProductsByVersionIdQuery, ProductsByVersionIdQueryVariables>(ProductsByVersionIdDocument, baseOptions);
       }
-export function useGetProductsByVersionIdLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetProductsByVersionIdQuery, GetProductsByVersionIdQueryVariables>) {
-          return Apollo.useLazyQuery<GetProductsByVersionIdQuery, GetProductsByVersionIdQueryVariables>(GetProductsByVersionIdDocument, baseOptions);
+export function useProductsByVersionIdLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ProductsByVersionIdQuery, ProductsByVersionIdQueryVariables>) {
+          return Apollo.useLazyQuery<ProductsByVersionIdQuery, ProductsByVersionIdQueryVariables>(ProductsByVersionIdDocument, baseOptions);
         }
-export type GetProductsByVersionIdQueryHookResult = ReturnType<typeof useGetProductsByVersionIdQuery>;
-export type GetProductsByVersionIdLazyQueryHookResult = ReturnType<typeof useGetProductsByVersionIdLazyQuery>;
-export type GetProductsByVersionIdQueryResult = Apollo.QueryResult<GetProductsByVersionIdQuery, GetProductsByVersionIdQueryVariables>;
-export function refetchGetProductsByVersionIdQuery(variables?: GetProductsByVersionIdQueryVariables) {
-      return { query: GetProductsByVersionIdDocument, variables: variables }
+export type ProductsByVersionIdQueryHookResult = ReturnType<typeof useProductsByVersionIdQuery>;
+export type ProductsByVersionIdLazyQueryHookResult = ReturnType<typeof useProductsByVersionIdLazyQuery>;
+export type ProductsByVersionIdQueryResult = Apollo.QueryResult<ProductsByVersionIdQuery, ProductsByVersionIdQueryVariables>;
+export function refetchProductsByVersionIdQuery(variables?: ProductsByVersionIdQueryVariables) {
+      return { query: ProductsByVersionIdDocument, variables: variables }
     }
-export const GetActiveVersionByCatalogIdDocument = gql`
-    query GetActiveVersionByCatalogID($id: Int!) {
+export const ActiveVersionByCatalogIdDocument = gql`
+    query ActiveVersionByCatalogID($id: Int!) {
   catalog: catalogById(id: $id) {
-    ...CatalogLite
+    ...Catalog
+    account: accountByAccount {
+      logo
+      name
+      active
+    }
     activeVersion: versionByActiveVersion {
-      ...VersionLite
+      ...Version
     }
   }
 }
-    ${CatalogLiteFragmentDoc}
-${VersionLiteFragmentDoc}`;
+    ${CatalogFragmentDoc}
+${VersionFragmentDoc}`;
 
 /**
- * __useGetActiveVersionByCatalogIdQuery__
+ * __useActiveVersionByCatalogIdQuery__
  *
- * To run a query within a React component, call `useGetActiveVersionByCatalogIdQuery` and pass it any options that fit your needs.
- * When your component renders, `useGetActiveVersionByCatalogIdQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * To run a query within a React component, call `useActiveVersionByCatalogIdQuery` and pass it any options that fit your needs.
+ * When your component renders, `useActiveVersionByCatalogIdQuery` returns an object from Apollo Client that contains loading, error, and data properties
  * you can use to render your UI.
  *
  * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
  *
  * @example
- * const { data, loading, error } = useGetActiveVersionByCatalogIdQuery({
+ * const { data, loading, error } = useActiveVersionByCatalogIdQuery({
  *   variables: {
  *      id: // value for 'id'
  *   },
  * });
  */
-export function useGetActiveVersionByCatalogIdQuery(baseOptions?: Apollo.QueryHookOptions<GetActiveVersionByCatalogIdQuery, GetActiveVersionByCatalogIdQueryVariables>) {
-        return Apollo.useQuery<GetActiveVersionByCatalogIdQuery, GetActiveVersionByCatalogIdQueryVariables>(GetActiveVersionByCatalogIdDocument, baseOptions);
+export function useActiveVersionByCatalogIdQuery(baseOptions?: Apollo.QueryHookOptions<ActiveVersionByCatalogIdQuery, ActiveVersionByCatalogIdQueryVariables>) {
+        return Apollo.useQuery<ActiveVersionByCatalogIdQuery, ActiveVersionByCatalogIdQueryVariables>(ActiveVersionByCatalogIdDocument, baseOptions);
       }
-export function useGetActiveVersionByCatalogIdLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetActiveVersionByCatalogIdQuery, GetActiveVersionByCatalogIdQueryVariables>) {
-          return Apollo.useLazyQuery<GetActiveVersionByCatalogIdQuery, GetActiveVersionByCatalogIdQueryVariables>(GetActiveVersionByCatalogIdDocument, baseOptions);
+export function useActiveVersionByCatalogIdLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ActiveVersionByCatalogIdQuery, ActiveVersionByCatalogIdQueryVariables>) {
+          return Apollo.useLazyQuery<ActiveVersionByCatalogIdQuery, ActiveVersionByCatalogIdQueryVariables>(ActiveVersionByCatalogIdDocument, baseOptions);
         }
-export type GetActiveVersionByCatalogIdQueryHookResult = ReturnType<typeof useGetActiveVersionByCatalogIdQuery>;
-export type GetActiveVersionByCatalogIdLazyQueryHookResult = ReturnType<typeof useGetActiveVersionByCatalogIdLazyQuery>;
-export type GetActiveVersionByCatalogIdQueryResult = Apollo.QueryResult<GetActiveVersionByCatalogIdQuery, GetActiveVersionByCatalogIdQueryVariables>;
-export function refetchGetActiveVersionByCatalogIdQuery(variables?: GetActiveVersionByCatalogIdQueryVariables) {
-      return { query: GetActiveVersionByCatalogIdDocument, variables: variables }
+export type ActiveVersionByCatalogIdQueryHookResult = ReturnType<typeof useActiveVersionByCatalogIdQuery>;
+export type ActiveVersionByCatalogIdLazyQueryHookResult = ReturnType<typeof useActiveVersionByCatalogIdLazyQuery>;
+export type ActiveVersionByCatalogIdQueryResult = Apollo.QueryResult<ActiveVersionByCatalogIdQuery, ActiveVersionByCatalogIdQueryVariables>;
+export function refetchActiveVersionByCatalogIdQuery(variables?: ActiveVersionByCatalogIdQueryVariables) {
+      return { query: ActiveVersionByCatalogIdDocument, variables: variables }
     }
-export const GetProductsCatalogDocument = gql`
-    query GetProductsCatalog($oid: UUID!) {
+export const ProductsCatalogDocument = gql`
+    query ProductsCatalog($oid: UUID!) {
   catalog(oid: $oid) {
     id
     oid
@@ -1133,35 +1498,35 @@ export const GetProductsCatalogDocument = gql`
     ${ProductFragmentDoc}`;
 
 /**
- * __useGetProductsCatalogQuery__
+ * __useProductsCatalogQuery__
  *
- * To run a query within a React component, call `useGetProductsCatalogQuery` and pass it any options that fit your needs.
- * When your component renders, `useGetProductsCatalogQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * To run a query within a React component, call `useProductsCatalogQuery` and pass it any options that fit your needs.
+ * When your component renders, `useProductsCatalogQuery` returns an object from Apollo Client that contains loading, error, and data properties
  * you can use to render your UI.
  *
  * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
  *
  * @example
- * const { data, loading, error } = useGetProductsCatalogQuery({
+ * const { data, loading, error } = useProductsCatalogQuery({
  *   variables: {
  *      oid: // value for 'oid'
  *   },
  * });
  */
-export function useGetProductsCatalogQuery(baseOptions?: Apollo.QueryHookOptions<GetProductsCatalogQuery, GetProductsCatalogQueryVariables>) {
-        return Apollo.useQuery<GetProductsCatalogQuery, GetProductsCatalogQueryVariables>(GetProductsCatalogDocument, baseOptions);
+export function useProductsCatalogQuery(baseOptions?: Apollo.QueryHookOptions<ProductsCatalogQuery, ProductsCatalogQueryVariables>) {
+        return Apollo.useQuery<ProductsCatalogQuery, ProductsCatalogQueryVariables>(ProductsCatalogDocument, baseOptions);
       }
-export function useGetProductsCatalogLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetProductsCatalogQuery, GetProductsCatalogQueryVariables>) {
-          return Apollo.useLazyQuery<GetProductsCatalogQuery, GetProductsCatalogQueryVariables>(GetProductsCatalogDocument, baseOptions);
+export function useProductsCatalogLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ProductsCatalogQuery, ProductsCatalogQueryVariables>) {
+          return Apollo.useLazyQuery<ProductsCatalogQuery, ProductsCatalogQueryVariables>(ProductsCatalogDocument, baseOptions);
         }
-export type GetProductsCatalogQueryHookResult = ReturnType<typeof useGetProductsCatalogQuery>;
-export type GetProductsCatalogLazyQueryHookResult = ReturnType<typeof useGetProductsCatalogLazyQuery>;
-export type GetProductsCatalogQueryResult = Apollo.QueryResult<GetProductsCatalogQuery, GetProductsCatalogQueryVariables>;
-export function refetchGetProductsCatalogQuery(variables?: GetProductsCatalogQueryVariables) {
-      return { query: GetProductsCatalogDocument, variables: variables }
+export type ProductsCatalogQueryHookResult = ReturnType<typeof useProductsCatalogQuery>;
+export type ProductsCatalogLazyQueryHookResult = ReturnType<typeof useProductsCatalogLazyQuery>;
+export type ProductsCatalogQueryResult = Apollo.QueryResult<ProductsCatalogQuery, ProductsCatalogQueryVariables>;
+export function refetchProductsCatalogQuery(variables?: ProductsCatalogQueryVariables) {
+      return { query: ProductsCatalogDocument, variables: variables }
     }
-export const GetProductsByCatalogIdDocument = gql`
-    query GetProductsByCatalogId($id: Int!) {
+export const ProductsByCatalogIdDocument = gql`
+    query ProductsByCatalogId($id: Int!) {
   catalog: catalogById(id: $id) {
     id
     oid
@@ -1173,35 +1538,35 @@ export const GetProductsByCatalogIdDocument = gql`
     ${ProductFragmentDoc}`;
 
 /**
- * __useGetProductsByCatalogIdQuery__
+ * __useProductsByCatalogIdQuery__
  *
- * To run a query within a React component, call `useGetProductsByCatalogIdQuery` and pass it any options that fit your needs.
- * When your component renders, `useGetProductsByCatalogIdQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * To run a query within a React component, call `useProductsByCatalogIdQuery` and pass it any options that fit your needs.
+ * When your component renders, `useProductsByCatalogIdQuery` returns an object from Apollo Client that contains loading, error, and data properties
  * you can use to render your UI.
  *
  * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
  *
  * @example
- * const { data, loading, error } = useGetProductsByCatalogIdQuery({
+ * const { data, loading, error } = useProductsByCatalogIdQuery({
  *   variables: {
  *      id: // value for 'id'
  *   },
  * });
  */
-export function useGetProductsByCatalogIdQuery(baseOptions?: Apollo.QueryHookOptions<GetProductsByCatalogIdQuery, GetProductsByCatalogIdQueryVariables>) {
-        return Apollo.useQuery<GetProductsByCatalogIdQuery, GetProductsByCatalogIdQueryVariables>(GetProductsByCatalogIdDocument, baseOptions);
+export function useProductsByCatalogIdQuery(baseOptions?: Apollo.QueryHookOptions<ProductsByCatalogIdQuery, ProductsByCatalogIdQueryVariables>) {
+        return Apollo.useQuery<ProductsByCatalogIdQuery, ProductsByCatalogIdQueryVariables>(ProductsByCatalogIdDocument, baseOptions);
       }
-export function useGetProductsByCatalogIdLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetProductsByCatalogIdQuery, GetProductsByCatalogIdQueryVariables>) {
-          return Apollo.useLazyQuery<GetProductsByCatalogIdQuery, GetProductsByCatalogIdQueryVariables>(GetProductsByCatalogIdDocument, baseOptions);
+export function useProductsByCatalogIdLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ProductsByCatalogIdQuery, ProductsByCatalogIdQueryVariables>) {
+          return Apollo.useLazyQuery<ProductsByCatalogIdQuery, ProductsByCatalogIdQueryVariables>(ProductsByCatalogIdDocument, baseOptions);
         }
-export type GetProductsByCatalogIdQueryHookResult = ReturnType<typeof useGetProductsByCatalogIdQuery>;
-export type GetProductsByCatalogIdLazyQueryHookResult = ReturnType<typeof useGetProductsByCatalogIdLazyQuery>;
-export type GetProductsByCatalogIdQueryResult = Apollo.QueryResult<GetProductsByCatalogIdQuery, GetProductsByCatalogIdQueryVariables>;
-export function refetchGetProductsByCatalogIdQuery(variables?: GetProductsByCatalogIdQueryVariables) {
-      return { query: GetProductsByCatalogIdDocument, variables: variables }
+export type ProductsByCatalogIdQueryHookResult = ReturnType<typeof useProductsByCatalogIdQuery>;
+export type ProductsByCatalogIdLazyQueryHookResult = ReturnType<typeof useProductsByCatalogIdLazyQuery>;
+export type ProductsByCatalogIdQueryResult = Apollo.QueryResult<ProductsByCatalogIdQuery, ProductsByCatalogIdQueryVariables>;
+export function refetchProductsByCatalogIdQuery(variables?: ProductsByCatalogIdQueryVariables) {
+      return { query: ProductsByCatalogIdDocument, variables: variables }
     }
-export const GetCategoriesByCatalogIdDocument = gql`
-    query GetCategoriesByCatalogId($oid: UUID!) {
+export const CategoriesByCatalogIdDocument = gql`
+    query CategoriesByCatalogId($oid: UUID!) {
   catalog(oid: $oid) {
     id
     oid
@@ -1213,35 +1578,35 @@ export const GetCategoriesByCatalogIdDocument = gql`
     ${CategoryFragmentDoc}`;
 
 /**
- * __useGetCategoriesByCatalogIdQuery__
+ * __useCategoriesByCatalogIdQuery__
  *
- * To run a query within a React component, call `useGetCategoriesByCatalogIdQuery` and pass it any options that fit your needs.
- * When your component renders, `useGetCategoriesByCatalogIdQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * To run a query within a React component, call `useCategoriesByCatalogIdQuery` and pass it any options that fit your needs.
+ * When your component renders, `useCategoriesByCatalogIdQuery` returns an object from Apollo Client that contains loading, error, and data properties
  * you can use to render your UI.
  *
  * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
  *
  * @example
- * const { data, loading, error } = useGetCategoriesByCatalogIdQuery({
+ * const { data, loading, error } = useCategoriesByCatalogIdQuery({
  *   variables: {
  *      oid: // value for 'oid'
  *   },
  * });
  */
-export function useGetCategoriesByCatalogIdQuery(baseOptions?: Apollo.QueryHookOptions<GetCategoriesByCatalogIdQuery, GetCategoriesByCatalogIdQueryVariables>) {
-        return Apollo.useQuery<GetCategoriesByCatalogIdQuery, GetCategoriesByCatalogIdQueryVariables>(GetCategoriesByCatalogIdDocument, baseOptions);
+export function useCategoriesByCatalogIdQuery(baseOptions?: Apollo.QueryHookOptions<CategoriesByCatalogIdQuery, CategoriesByCatalogIdQueryVariables>) {
+        return Apollo.useQuery<CategoriesByCatalogIdQuery, CategoriesByCatalogIdQueryVariables>(CategoriesByCatalogIdDocument, baseOptions);
       }
-export function useGetCategoriesByCatalogIdLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetCategoriesByCatalogIdQuery, GetCategoriesByCatalogIdQueryVariables>) {
-          return Apollo.useLazyQuery<GetCategoriesByCatalogIdQuery, GetCategoriesByCatalogIdQueryVariables>(GetCategoriesByCatalogIdDocument, baseOptions);
+export function useCategoriesByCatalogIdLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<CategoriesByCatalogIdQuery, CategoriesByCatalogIdQueryVariables>) {
+          return Apollo.useLazyQuery<CategoriesByCatalogIdQuery, CategoriesByCatalogIdQueryVariables>(CategoriesByCatalogIdDocument, baseOptions);
         }
-export type GetCategoriesByCatalogIdQueryHookResult = ReturnType<typeof useGetCategoriesByCatalogIdQuery>;
-export type GetCategoriesByCatalogIdLazyQueryHookResult = ReturnType<typeof useGetCategoriesByCatalogIdLazyQuery>;
-export type GetCategoriesByCatalogIdQueryResult = Apollo.QueryResult<GetCategoriesByCatalogIdQuery, GetCategoriesByCatalogIdQueryVariables>;
-export function refetchGetCategoriesByCatalogIdQuery(variables?: GetCategoriesByCatalogIdQueryVariables) {
-      return { query: GetCategoriesByCatalogIdDocument, variables: variables }
+export type CategoriesByCatalogIdQueryHookResult = ReturnType<typeof useCategoriesByCatalogIdQuery>;
+export type CategoriesByCatalogIdLazyQueryHookResult = ReturnType<typeof useCategoriesByCatalogIdLazyQuery>;
+export type CategoriesByCatalogIdQueryResult = Apollo.QueryResult<CategoriesByCatalogIdQuery, CategoriesByCatalogIdQueryVariables>;
+export function refetchCategoriesByCatalogIdQuery(variables?: CategoriesByCatalogIdQueryVariables) {
+      return { query: CategoriesByCatalogIdDocument, variables: variables }
     }
-export const GetCatalogCategoriesDocument = gql`
-    query GetCatalogCategories($id: Int!) {
+export const CatalogCategoriesDocument = gql`
+    query CatalogCategories($id: Int!) {
   catalog: catalogById(id: $id) {
     id
     oid
@@ -1253,35 +1618,35 @@ export const GetCatalogCategoriesDocument = gql`
     ${CategoryFragmentDoc}`;
 
 /**
- * __useGetCatalogCategoriesQuery__
+ * __useCatalogCategoriesQuery__
  *
- * To run a query within a React component, call `useGetCatalogCategoriesQuery` and pass it any options that fit your needs.
- * When your component renders, `useGetCatalogCategoriesQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * To run a query within a React component, call `useCatalogCategoriesQuery` and pass it any options that fit your needs.
+ * When your component renders, `useCatalogCategoriesQuery` returns an object from Apollo Client that contains loading, error, and data properties
  * you can use to render your UI.
  *
  * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
  *
  * @example
- * const { data, loading, error } = useGetCatalogCategoriesQuery({
+ * const { data, loading, error } = useCatalogCategoriesQuery({
  *   variables: {
  *      id: // value for 'id'
  *   },
  * });
  */
-export function useGetCatalogCategoriesQuery(baseOptions?: Apollo.QueryHookOptions<GetCatalogCategoriesQuery, GetCatalogCategoriesQueryVariables>) {
-        return Apollo.useQuery<GetCatalogCategoriesQuery, GetCatalogCategoriesQueryVariables>(GetCatalogCategoriesDocument, baseOptions);
+export function useCatalogCategoriesQuery(baseOptions?: Apollo.QueryHookOptions<CatalogCategoriesQuery, CatalogCategoriesQueryVariables>) {
+        return Apollo.useQuery<CatalogCategoriesQuery, CatalogCategoriesQueryVariables>(CatalogCategoriesDocument, baseOptions);
       }
-export function useGetCatalogCategoriesLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetCatalogCategoriesQuery, GetCatalogCategoriesQueryVariables>) {
-          return Apollo.useLazyQuery<GetCatalogCategoriesQuery, GetCatalogCategoriesQueryVariables>(GetCatalogCategoriesDocument, baseOptions);
+export function useCatalogCategoriesLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<CatalogCategoriesQuery, CatalogCategoriesQueryVariables>) {
+          return Apollo.useLazyQuery<CatalogCategoriesQuery, CatalogCategoriesQueryVariables>(CatalogCategoriesDocument, baseOptions);
         }
-export type GetCatalogCategoriesQueryHookResult = ReturnType<typeof useGetCatalogCategoriesQuery>;
-export type GetCatalogCategoriesLazyQueryHookResult = ReturnType<typeof useGetCatalogCategoriesLazyQuery>;
-export type GetCatalogCategoriesQueryResult = Apollo.QueryResult<GetCatalogCategoriesQuery, GetCatalogCategoriesQueryVariables>;
-export function refetchGetCatalogCategoriesQuery(variables?: GetCatalogCategoriesQueryVariables) {
-      return { query: GetCatalogCategoriesDocument, variables: variables }
+export type CatalogCategoriesQueryHookResult = ReturnType<typeof useCatalogCategoriesQuery>;
+export type CatalogCategoriesLazyQueryHookResult = ReturnType<typeof useCatalogCategoriesLazyQuery>;
+export type CatalogCategoriesQueryResult = Apollo.QueryResult<CatalogCategoriesQuery, CatalogCategoriesQueryVariables>;
+export function refetchCatalogCategoriesQuery(variables?: CatalogCategoriesQueryVariables) {
+      return { query: CatalogCategoriesDocument, variables: variables }
     }
-export const GetCategoriesByVersionIdDocument = gql`
-    query GetCategoriesByVersionId($id: Int!) {
+export const CategoriesByVersionIdDocument = gql`
+    query CategoriesByVersionId($id: Int!) {
   version: versionById(id: $id) {
     id
     oid
@@ -1298,35 +1663,35 @@ export const GetCategoriesByVersionIdDocument = gql`
     ${CategoryFragmentDoc}`;
 
 /**
- * __useGetCategoriesByVersionIdQuery__
+ * __useCategoriesByVersionIdQuery__
  *
- * To run a query within a React component, call `useGetCategoriesByVersionIdQuery` and pass it any options that fit your needs.
- * When your component renders, `useGetCategoriesByVersionIdQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * To run a query within a React component, call `useCategoriesByVersionIdQuery` and pass it any options that fit your needs.
+ * When your component renders, `useCategoriesByVersionIdQuery` returns an object from Apollo Client that contains loading, error, and data properties
  * you can use to render your UI.
  *
  * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
  *
  * @example
- * const { data, loading, error } = useGetCategoriesByVersionIdQuery({
+ * const { data, loading, error } = useCategoriesByVersionIdQuery({
  *   variables: {
  *      id: // value for 'id'
  *   },
  * });
  */
-export function useGetCategoriesByVersionIdQuery(baseOptions?: Apollo.QueryHookOptions<GetCategoriesByVersionIdQuery, GetCategoriesByVersionIdQueryVariables>) {
-        return Apollo.useQuery<GetCategoriesByVersionIdQuery, GetCategoriesByVersionIdQueryVariables>(GetCategoriesByVersionIdDocument, baseOptions);
+export function useCategoriesByVersionIdQuery(baseOptions?: Apollo.QueryHookOptions<CategoriesByVersionIdQuery, CategoriesByVersionIdQueryVariables>) {
+        return Apollo.useQuery<CategoriesByVersionIdQuery, CategoriesByVersionIdQueryVariables>(CategoriesByVersionIdDocument, baseOptions);
       }
-export function useGetCategoriesByVersionIdLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetCategoriesByVersionIdQuery, GetCategoriesByVersionIdQueryVariables>) {
-          return Apollo.useLazyQuery<GetCategoriesByVersionIdQuery, GetCategoriesByVersionIdQueryVariables>(GetCategoriesByVersionIdDocument, baseOptions);
+export function useCategoriesByVersionIdLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<CategoriesByVersionIdQuery, CategoriesByVersionIdQueryVariables>) {
+          return Apollo.useLazyQuery<CategoriesByVersionIdQuery, CategoriesByVersionIdQueryVariables>(CategoriesByVersionIdDocument, baseOptions);
         }
-export type GetCategoriesByVersionIdQueryHookResult = ReturnType<typeof useGetCategoriesByVersionIdQuery>;
-export type GetCategoriesByVersionIdLazyQueryHookResult = ReturnType<typeof useGetCategoriesByVersionIdLazyQuery>;
-export type GetCategoriesByVersionIdQueryResult = Apollo.QueryResult<GetCategoriesByVersionIdQuery, GetCategoriesByVersionIdQueryVariables>;
-export function refetchGetCategoriesByVersionIdQuery(variables?: GetCategoriesByVersionIdQueryVariables) {
-      return { query: GetCategoriesByVersionIdDocument, variables: variables }
+export type CategoriesByVersionIdQueryHookResult = ReturnType<typeof useCategoriesByVersionIdQuery>;
+export type CategoriesByVersionIdLazyQueryHookResult = ReturnType<typeof useCategoriesByVersionIdLazyQuery>;
+export type CategoriesByVersionIdQueryResult = Apollo.QueryResult<CategoriesByVersionIdQuery, CategoriesByVersionIdQueryVariables>;
+export function refetchCategoriesByVersionIdQuery(variables?: CategoriesByVersionIdQueryVariables) {
+      return { query: CategoriesByVersionIdDocument, variables: variables }
     }
-export const GetLeadsAccountDocument = gql`
-    query GetLeadsAccount($account: UUID!) {
+export const LeadsAccountDocument = gql`
+    query LeadsAccount($account: UUID!) {
   leads(condition: {account: $account}) {
     oid
     firstName
@@ -1343,32 +1708,32 @@ export const GetLeadsAccountDocument = gql`
     `;
 
 /**
- * __useGetLeadsAccountQuery__
+ * __useLeadsAccountQuery__
  *
- * To run a query within a React component, call `useGetLeadsAccountQuery` and pass it any options that fit your needs.
- * When your component renders, `useGetLeadsAccountQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * To run a query within a React component, call `useLeadsAccountQuery` and pass it any options that fit your needs.
+ * When your component renders, `useLeadsAccountQuery` returns an object from Apollo Client that contains loading, error, and data properties
  * you can use to render your UI.
  *
  * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
  *
  * @example
- * const { data, loading, error } = useGetLeadsAccountQuery({
+ * const { data, loading, error } = useLeadsAccountQuery({
  *   variables: {
  *      account: // value for 'account'
  *   },
  * });
  */
-export function useGetLeadsAccountQuery(baseOptions?: Apollo.QueryHookOptions<GetLeadsAccountQuery, GetLeadsAccountQueryVariables>) {
-        return Apollo.useQuery<GetLeadsAccountQuery, GetLeadsAccountQueryVariables>(GetLeadsAccountDocument, baseOptions);
+export function useLeadsAccountQuery(baseOptions?: Apollo.QueryHookOptions<LeadsAccountQuery, LeadsAccountQueryVariables>) {
+        return Apollo.useQuery<LeadsAccountQuery, LeadsAccountQueryVariables>(LeadsAccountDocument, baseOptions);
       }
-export function useGetLeadsAccountLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetLeadsAccountQuery, GetLeadsAccountQueryVariables>) {
-          return Apollo.useLazyQuery<GetLeadsAccountQuery, GetLeadsAccountQueryVariables>(GetLeadsAccountDocument, baseOptions);
+export function useLeadsAccountLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<LeadsAccountQuery, LeadsAccountQueryVariables>) {
+          return Apollo.useLazyQuery<LeadsAccountQuery, LeadsAccountQueryVariables>(LeadsAccountDocument, baseOptions);
         }
-export type GetLeadsAccountQueryHookResult = ReturnType<typeof useGetLeadsAccountQuery>;
-export type GetLeadsAccountLazyQueryHookResult = ReturnType<typeof useGetLeadsAccountLazyQuery>;
-export type GetLeadsAccountQueryResult = Apollo.QueryResult<GetLeadsAccountQuery, GetLeadsAccountQueryVariables>;
-export function refetchGetLeadsAccountQuery(variables?: GetLeadsAccountQueryVariables) {
-      return { query: GetLeadsAccountDocument, variables: variables }
+export type LeadsAccountQueryHookResult = ReturnType<typeof useLeadsAccountQuery>;
+export type LeadsAccountLazyQueryHookResult = ReturnType<typeof useLeadsAccountLazyQuery>;
+export type LeadsAccountQueryResult = Apollo.QueryResult<LeadsAccountQuery, LeadsAccountQueryVariables>;
+export function refetchLeadsAccountQuery(variables?: LeadsAccountQueryVariables) {
+      return { query: LeadsAccountDocument, variables: variables }
     }
 export const UpdatePageDocument = gql`
     mutation UpdatePage($id: UUID!, $payload: PagePatch!) {
@@ -1410,10 +1775,22 @@ export const CreateCatalogDocument = gql`
   createCatalog(input: {catalog: $catalog}) {
     catalog {
       ...Catalog
+      account: accountByAccount {
+        logo
+        name
+        active
+      }
+      activeVersion: versionByActiveVersion {
+        ...Version
+      }
+      versions: versionsByCatalog(orderBy: ID_DESC, offset: 0) {
+        ...Version
+      }
     }
   }
 }
-    ${CatalogFragmentDoc}`;
+    ${CatalogFragmentDoc}
+${VersionFragmentDoc}`;
 export type CreateCatalogMutationFn = Apollo.MutationFunction<CreateCatalogMutation, CreateCatalogMutationVariables>;
 
 /**
@@ -1444,10 +1821,17 @@ export const UpdateCatalogDocument = gql`
   updateCatalog(input: {patch: $catalog, oid: $oid}) {
     catalog {
       ...Catalog
+      activeVersion: versionByActiveVersion {
+        ...Version
+      }
+      versions: versionsByCatalog(orderBy: ID_DESC, offset: 0) {
+        ...Version
+      }
     }
   }
 }
-    ${CatalogFragmentDoc}`;
+    ${CatalogFragmentDoc}
+${VersionFragmentDoc}`;
 export type UpdateCatalogMutationFn = Apollo.MutationFunction<UpdateCatalogMutation, UpdateCatalogMutationVariables>;
 
 /**
@@ -1514,10 +1898,14 @@ export const CreateVersionDocument = gql`
   createVersion(input: {version: $version}) {
     version {
       ...Version
+      catalog: catalogByCatalog {
+        ...Catalog
+      }
     }
   }
 }
-    ${VersionFragmentDoc}`;
+    ${VersionFragmentDoc}
+${CatalogFragmentDoc}`;
 export type CreateVersionMutationFn = Apollo.MutationFunction<CreateVersionMutation, CreateVersionMutationVariables>;
 
 /**
@@ -1548,10 +1936,14 @@ export const UpdateVersionDocument = gql`
   updateVersion(input: {patch: $version, oid: $oid}) {
     version {
       ...Version
+      catalog: catalogByCatalog {
+        ...Catalog
+      }
     }
   }
 }
-    ${VersionFragmentDoc}`;
+    ${VersionFragmentDoc}
+${CatalogFragmentDoc}`;
 export type UpdateVersionMutationFn = Apollo.MutationFunction<UpdateVersionMutation, UpdateVersionMutationVariables>;
 
 /**
@@ -1682,8 +2074,8 @@ export function useDeletePageMutation(baseOptions?: Apollo.MutationHookOptions<D
 export type DeletePageMutationHookResult = ReturnType<typeof useDeletePageMutation>;
 export type DeletePageMutationResult = Apollo.MutationResult<DeletePageMutation>;
 export type DeletePageMutationOptions = Apollo.BaseMutationOptions<DeletePageMutation, DeletePageMutationVariables>;
-export const GetCatalogFeedsDocument = gql`
-    query GetCatalogFeeds {
+export const CatalogFeedsDocument = gql`
+    query CatalogFeeds {
   feeds {
     ...Feed
   }
@@ -1691,31 +2083,31 @@ export const GetCatalogFeedsDocument = gql`
     ${FeedFragmentDoc}`;
 
 /**
- * __useGetCatalogFeedsQuery__
+ * __useCatalogFeedsQuery__
  *
- * To run a query within a React component, call `useGetCatalogFeedsQuery` and pass it any options that fit your needs.
- * When your component renders, `useGetCatalogFeedsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * To run a query within a React component, call `useCatalogFeedsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useCatalogFeedsQuery` returns an object from Apollo Client that contains loading, error, and data properties
  * you can use to render your UI.
  *
  * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
  *
  * @example
- * const { data, loading, error } = useGetCatalogFeedsQuery({
+ * const { data, loading, error } = useCatalogFeedsQuery({
  *   variables: {
  *   },
  * });
  */
-export function useGetCatalogFeedsQuery(baseOptions?: Apollo.QueryHookOptions<GetCatalogFeedsQuery, GetCatalogFeedsQueryVariables>) {
-        return Apollo.useQuery<GetCatalogFeedsQuery, GetCatalogFeedsQueryVariables>(GetCatalogFeedsDocument, baseOptions);
+export function useCatalogFeedsQuery(baseOptions?: Apollo.QueryHookOptions<CatalogFeedsQuery, CatalogFeedsQueryVariables>) {
+        return Apollo.useQuery<CatalogFeedsQuery, CatalogFeedsQueryVariables>(CatalogFeedsDocument, baseOptions);
       }
-export function useGetCatalogFeedsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetCatalogFeedsQuery, GetCatalogFeedsQueryVariables>) {
-          return Apollo.useLazyQuery<GetCatalogFeedsQuery, GetCatalogFeedsQueryVariables>(GetCatalogFeedsDocument, baseOptions);
+export function useCatalogFeedsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<CatalogFeedsQuery, CatalogFeedsQueryVariables>) {
+          return Apollo.useLazyQuery<CatalogFeedsQuery, CatalogFeedsQueryVariables>(CatalogFeedsDocument, baseOptions);
         }
-export type GetCatalogFeedsQueryHookResult = ReturnType<typeof useGetCatalogFeedsQuery>;
-export type GetCatalogFeedsLazyQueryHookResult = ReturnType<typeof useGetCatalogFeedsLazyQuery>;
-export type GetCatalogFeedsQueryResult = Apollo.QueryResult<GetCatalogFeedsQuery, GetCatalogFeedsQueryVariables>;
-export function refetchGetCatalogFeedsQuery(variables?: GetCatalogFeedsQueryVariables) {
-      return { query: GetCatalogFeedsDocument, variables: variables }
+export type CatalogFeedsQueryHookResult = ReturnType<typeof useCatalogFeedsQuery>;
+export type CatalogFeedsLazyQueryHookResult = ReturnType<typeof useCatalogFeedsLazyQuery>;
+export type CatalogFeedsQueryResult = Apollo.QueryResult<CatalogFeedsQuery, CatalogFeedsQueryVariables>;
+export function refetchCatalogFeedsQuery(variables?: CatalogFeedsQueryVariables) {
+      return { query: CatalogFeedsDocument, variables: variables }
     }
 export const CreateFeedDocument = gql`
     mutation CreateFeed($feed: FeedInput!) {

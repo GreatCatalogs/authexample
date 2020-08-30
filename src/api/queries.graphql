@@ -1,53 +1,56 @@
-fragment CatalogLite on Catalog {
+fragment Catalog on Catalog {
   id
   oid
   name
+  title
   merchantId
   customSubdomain
   text2Disclaimer
   options
   description
-  account: accountByAccount {
-    logo
-    name
-    active
-  }
 }
 
+fragment Product on Product {
+  src
+  additionalImages
+  sku
+  category
+  tags
+  title
+  description
+  tags
+  url
+  price
+  salePrice
+  options
+  oid
+  expired
+  status
+}
 fragment Page on Page {
-      oid
-      imageSource
-      imageUrl
-      pageType
-      options
+  oid
+  imageSource
+  imageUrl
+  pageType
+  options
 }
 
-fragment Feed on Feed{
-  	oid
-    feedType
-    feedMap
-    productMap
-    autoUpdate
-    options
-    dateModified
-    catalog: catalogByCatalog {
-      id
-      oid
-      name
-    }
-}
-
-fragment Catalog on Catalog {
-  ...CatalogLite
-  activeVersion: versionByActiveVersion {
-    ...VersionLite
-  }
-  versions: versionsByCatalog(orderBy: ID_DESC, offset: 0) {
-    ...VersionLite
+fragment Feed on Feed {
+  oid
+  feedType
+  feedMap
+  productMap
+  autoUpdate
+  options
+  dateModified
+  catalog: catalogByCatalog {
+    id
+    oid
+    name
   }
 }
 
-fragment VersionLite on Version {
+fragment Version on Version {
   id
   oid
   name
@@ -57,13 +60,7 @@ fragment VersionLite on Version {
   description
   options
   versionNo
-}
-
-fragment Version on Version {
-  ...VersionLite
-  catalog: catalogByCatalog {
-    ...CatalogLite
-  }
+  order
 }
 
 fragment Category on Category {
@@ -74,29 +71,94 @@ fragment Category on Category {
   options
   subcategories: subCategoriesByCategory {
     id
-    oid
     name
     image
-    options
+    parent: categoryByCategory {
+      name
+    }
+  }
+}
+query ProductBySku($sku: String!, $catalog: UUID!) {
+  products(condition: { sku: $sku, catalog: $catalog }) {
+    ...Product
+  }
+}
+query FullCatalogById($id: Int!) {
+  catalog: catalogById(id: $id) {
+    ...Catalog
+    products: productsByCatalog {
+      ...Product
+    }
+    categories: categoriesByCatalog {
+      ...Category
+      products: subProductsByMainAndCatalog {
+        sku
+        sub
+        main
+      }
+    }
+    version: versionByActiveVersion {
+      ...Version
+      pages: pagesByVersion {
+        ...Page
+      }
+    }
+    account: accountByAccount {
+      logo
+      name
+      catalogs: catalogsByAccount {
+        id
+        oid
+        merchantId
+        activeVersion: versionByActiveVersion {
+          id
+          oid
+          name
+          coverUrl
+        }
+      }
+    }
+  }
+}
+query FullVersionById($id: Int!) {
+  version: versionById(id: $id) {
+    ...Version
+    pages: pagesByVersion {
+      ...Page
+    }
+    catalog: catalogByCatalog {
+      ...Catalog
+      products: productsByCatalog {
+        ...Product
+      }
+      categories: categoriesByCatalog {
+        ...Category
+        products: subProductsByMainAndCatalog {
+          sku
+          sub
+          main
+        }
+      }
+      account: accountByAccount {
+        logo
+        name
+        catalogs: catalogsByAccount {
+          id
+          oid
+          merchantId
+          activeVersion: versionByActiveVersion {
+            id
+            oid
+            name
+            coverUrl
+          }
+        }
+      }
+    }
   }
 }
 
-fragment Product on Product {
-  oid
-  sku
-  title
-  price
-  url
-  src
-  category
-  brand
-  tags
-  color
-  expired
-  options
-}
-
-query GetActiveAccounts {
+query ActiveAccounts {
   accounts(condition: { active: true }, orderBy: NAME_ASC) {
     oid
     name
@@ -106,28 +168,64 @@ query GetActiveAccounts {
     logo
     catalogs: catalogsByAccount {
       ...Catalog
+      activeVersion: versionByActiveVersion {
+        ...Version
+      }
+      versions: versionsByCatalog(orderBy: ID_DESC, offset: 0) {
+        ...Version
+      }
     }
   }
 }
 
-query GetCatalogByOid($oid: UUID!) {
+query CatalogByOid($oid: UUID!) {
   catalog(oid: $oid) {
     ...Catalog
+    account: accountByAccount {
+      logo
+      name
+      active
+    }
+    activeVersion: versionByActiveVersion {
+      ...Version
+    }
+    versions: versionsByCatalog(orderBy: ID_DESC, offset: 0) {
+      ...Version
+    }
   }
 }
 
-query GetCatalogByVersionId($id: Int!) {
+query CatalogByVersionId($id: Int!) {
   version: versionById(id: $id) {
     ...Version
+    catalog: catalogByCatalog {
+      ...Catalog
+      account: accountByAccount {
+        logo
+        name
+        active
+      }
+    }
   }
 }
-query GetCatalogById($id: Int!) {
+query CatalogById($id: Int!) {
   catalog: catalogById(id: $id) {
     ...Catalog
+    account: accountByAccount {
+      logo
+      name
+      active
+    }
+    activeVersion: versionByActiveVersion {
+      ...Version
+    }
+    versions: versionsByCatalog(orderBy: ID_DESC, offset: 0) {
+      ...Version
+    }
   }
 }
 
-query GetAllAuthorizedUsers {
+query AllAuthorizedUsers {
   authorizedUsers {
     oid
     email
@@ -137,7 +235,7 @@ query GetAllAuthorizedUsers {
   }
 }
 
-query GetUserByEmail($email: String!) {
+query UserByEmail($email: String!) {
   user: authorizedUserByEmail(email: $email) {
     oid
     email
@@ -149,15 +247,26 @@ query GetUserByEmail($email: String!) {
         active
         catalogs: catalogsByAccount {
           ...Catalog
+          account: accountByAccount {
+            logo
+            name
+            active
+          }
+          activeVersion: versionByActiveVersion {
+            ...Version
+          }
+          versions: versionsByCatalog(orderBy: ID_DESC, offset: 0) {
+            ...Version
+          }
         }
       }
     }
   }
 }
 
-query GetVersionFullById($id: Int!) {
+query VersionFullById($id: Int!) {
   version: versionById(id: $id) {
-    ...VersionLite
+    ...Version
     products: productsByVersionsByVersionOid {
       sku
     }
@@ -165,7 +274,7 @@ query GetVersionFullById($id: Int!) {
       ...Page
     }
     catalog: catalogByCatalog {
-      ...CatalogLite
+      ...Catalog
       products: productsByCatalog {
         ...Product
       }
@@ -173,7 +282,7 @@ query GetVersionFullById($id: Int!) {
   }
 }
 
-query GetProductsByVersionId($id: Int!) {
+query ProductsByVersionId($id: Int!) {
   version: versionById(id: $id) {
     id
     oid
@@ -187,16 +296,21 @@ query GetProductsByVersionId($id: Int!) {
     }
   }
 }
-query GetActiveVersionByCatalogID($id: Int!) {
+query ActiveVersionByCatalogID($id: Int!) {
   catalog: catalogById(id: $id) {
-    ...CatalogLite
+    ...Catalog
+    account: accountByAccount {
+      logo
+      name
+      active
+    }
     activeVersion: versionByActiveVersion {
-      ...VersionLite
+      ...Version
     }
   }
 }
 
-query GetProductsCatalog($oid: UUID!) {
+query ProductsCatalog($oid: UUID!) {
   catalog(oid: $oid) {
     id
     oid
@@ -206,7 +320,7 @@ query GetProductsCatalog($oid: UUID!) {
   }
 }
 
-query GetProductsByCatalogId($id: Int!) {
+query ProductsByCatalogId($id: Int!) {
   catalog: catalogById(id: $id) {
     id
     oid
@@ -215,7 +329,7 @@ query GetProductsByCatalogId($id: Int!) {
     }
   }
 }
-query GetCategoriesByCatalogId($oid: UUID!) {
+query CategoriesByCatalogId($oid: UUID!) {
   catalog(oid: $oid) {
     id
     oid
@@ -224,7 +338,7 @@ query GetCategoriesByCatalogId($oid: UUID!) {
     }
   }
 }
-query GetCatalogCategories($id: Int!) {
+query CatalogCategories($id: Int!) {
   catalog: catalogById(id: $id) {
     id
     oid
@@ -233,7 +347,7 @@ query GetCatalogCategories($id: Int!) {
     }
   }
 }
-query GetCategoriesByVersionId($id: Int!) {
+query CategoriesByVersionId($id: Int!) {
   version: versionById(id: $id) {
     id
     oid
@@ -247,7 +361,7 @@ query GetCategoriesByVersionId($id: Int!) {
     }
   }
 }
-query GetLeadsAccount($account: UUID!) {
+query LeadsAccount($account: UUID!) {
   leads(condition: { account: $account }) {
     oid
     firstName
@@ -273,6 +387,17 @@ mutation CreateCatalog($catalog: CatalogInput!) {
   createCatalog(input: { catalog: $catalog }) {
     catalog {
       ...Catalog
+      account: accountByAccount {
+        logo
+        name
+        active
+      }
+      activeVersion: versionByActiveVersion {
+        ...Version
+      }
+      versions: versionsByCatalog(orderBy: ID_DESC, offset: 0) {
+        ...Version
+      }
     }
   }
 }
@@ -280,6 +405,12 @@ mutation UpdateCatalog($catalog: CatalogPatch!, $oid: UUID!) {
   updateCatalog(input: { patch: $catalog, oid: $oid }) {
     catalog {
       ...Catalog
+      activeVersion: versionByActiveVersion {
+        ...Version
+      }
+      versions: versionsByCatalog(orderBy: ID_DESC, offset: 0) {
+        ...Version
+      }
     }
   }
 }
@@ -295,13 +426,19 @@ mutation CreateVersion($version: VersionInput!) {
   createVersion(input: { version: $version }) {
     version {
       ...Version
+      catalog: catalogByCatalog {
+        ...Catalog
+      }
     }
   }
 }
 mutation UpdateVersion($version: VersionPatch!, $oid: UUID!) {
   updateVersion(input: { patch: $version, oid: $oid }) {
     version {
-    ...Version
+      ...Version
+      catalog: catalogByCatalog {
+        ...Catalog
+      }
     }
   }
 }
@@ -328,7 +465,7 @@ mutation DeletePage($oid: UUID!) {
     }
   }
 }
-query GetCatalogFeeds {
+query CatalogFeeds {
   feeds {
     ...Feed
   }
@@ -351,7 +488,7 @@ mutation UpdateFeed($feed: FeedPatch!, $oid: UUID!) {
 mutation DeleteFeed($oid: UUID!) {
   deleteFeed(input: { oid: $oid }) {
     feed {
-      oid      
+      oid
     }
   }
 }
@@ -397,7 +534,6 @@ mutation DeleteProduct($oid: UUID!) {
   deleteProduct(input: { oid: $oid }) {
     product {
       oid
-      id
     }
   }
 }

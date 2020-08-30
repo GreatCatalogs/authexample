@@ -14,3 +14,6 @@ generates:
     config:
       withRefetchFn: true
       withMutationFn: true
+  src/api/document.d.ts:
+    plugins:
+      - typed-document-node
