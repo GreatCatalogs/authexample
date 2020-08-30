@@ -1,20 +1,29 @@
-import defaultUser from '../utils/default-user';
+import defaultUser from "../utils/default-user";
+import { Auth } from "aws-amplify";
 
-export async function signIn(email, password) {
+export async function signIn(email, password, confirmation) {
   try {
-    // Send request
-    console.log(email, password);
-
+    if (confirmation) {
+      const user = await Auth.confirmSignUp(email, confirmation);
+    }
+    const user = await Auth.signIn(email, password);
     return {
       isOk: true,
-      data: defaultUser
+      data: { ...defaultUser, email: email },
     };
-  }
-  catch {
-    return {
-      isOk: false,
-      message: "Authentication failed"
-    };
+  } catch (error) {
+    console.log("error signing in", error);
+    if (error.code === "UserNotConfirmedException") {
+      return {
+        isOk: false,
+        confirmRequired: true,
+        message: "User Not Confirmed",
+      };
+    } else
+      return {
+        isOk: false,
+        message: "Authentication failed",
+      };
   }
 }
 
@@ -23,13 +32,12 @@ export async function getUser() {
     // Send request
 
     return {
-      isOk: true,
-      data: defaultUser
+      isOk: false,
+      data: null,
     };
-  }
-  catch {
+  } catch {
     return {
-      isOk: false
+      isOk: false,
     };
   }
 }
@@ -38,15 +46,25 @@ export async function createAccount(email, password) {
   try {
     // Send request
     console.log(email, password);
+    const { user } = await Auth.signUp({
+      username: email,
+      password: password,
+      attributes: {
+        email, // optional
+        //phone_number,   // optional - E.164 number convention
+        // other custom attributes
+      },
+    });
+    console.log(user);
+    return {
+      isOk: true,
+    };
+  } catch (error) {
+    console.log("error signing up:", error);
 
     return {
-      isOk: true
-    };
-  }
-  catch {
-    return {
       isOk: false,
-      message: "Failed to create account"
+      message: "Failed to create account",
     };
   }
 }
@@ -57,15 +75,14 @@ export async function changePassword(email, recoveryCode) {
     console.log(email, recoveryCode);
 
     return {
-      isOk: true
+      isOk: true,
     };
-  }
-  catch {
+  } catch {
     return {
       isOk: false,
-      message: "Failed to change password"
-    }
-  };
+      message: "Failed to change password",
+    };
+  }
 }
 
 export async function resetPassword(email) {
@@ -74,13 +91,12 @@ export async function resetPassword(email) {
     console.log(email);
 
     return {
-      isOk: true
+      isOk: true,
     };
-  }
-  catch {
+  } catch {
     return {
       isOk: false,
-      message: "Failed to reset password"
+      message: "Failed to reset password",
     };
   }
 }

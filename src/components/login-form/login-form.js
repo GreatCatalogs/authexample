@@ -13,23 +13,31 @@ import notify from 'devextreme/ui/notify';
 import { useAuth } from '../../contexts/auth';
 
 import './login-form.scss';
+import { Auth } from 'aws-amplify';
 
 export default function () {
   const history = useHistory();
   const { signIn } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [confirm, setConfirm] = useState(false);
   const formData = useRef({});
 
   const onSubmit = useCallback(async (e) => {
     e.preventDefault();
-    const { email, password } = formData.current;
+    const { email, password,confirmation } = formData.current;
     setLoading(true);
 
-    const result = await signIn(email, password);
+    const result = await signIn(email, password, confirmation);
+    if (result.confirmRequired){
+      setLoading(false);
+      setConfirm(true);
+      notify(result.message, 'error', 2000);
+    } else 
     if (!result.isOk) {
       setLoading(false);
       notify(result.message, 'error', 2000);
     }
+
   }, [signIn]);
 
   const onCreateAccountClick = useCallback(() => {
@@ -56,7 +64,17 @@ export default function () {
           <RequiredRule message="Password is required" />
           <Label visible={false} />
         </Item>
+        {confirm &&
         <Item
+          dataField={'confirmation'}
+          editorType={'dxTextBox'}
+          editorOptions={confirmationEditorOptions}
+        >
+          <RequiredRule message="Enter Confirmation Code" />
+          <Label visible={false} />
+        </Item>
+        }
+      <Item
           dataField={'rememberMe'}
           editorType={'dxCheckBox'}
           editorOptions={rememberMeEditorOptions}
@@ -91,10 +109,12 @@ export default function () {
           />
         </ButtonItem>
       </Form>
+  
     </form>
   );
 }
 
 const emailEditorOptions = { stylingMode: 'filled', placeholder: 'Email', mode: 'email' };
 const passwordEditorOptions = { stylingMode: 'filled', placeholder: 'Password', mode: 'password' };
+const confirmationEditorOptions = { stylingMode: 'filled', placeholder: 'Confirmation Code', mode: 'password' };
 const rememberMeEditorOptions = { text: 'Remember me', elementAttr: { class: 'form-text' } };
