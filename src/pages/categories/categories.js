@@ -1,93 +1,92 @@
-import React, { useEffect } from 'react';
-import './categories.scss';
-import { Map, List, fromJS } from 'immutable';
+import React from "react";
+import "./categories.scss";
+import { v4 as uuidv4 } from "uuid";
 import DataGrid, {
   Editing,
   Column,
   Pager,
   Paging,
   FilterRow,
-  Lookup,
-  MasterDetail
-} from 'devextreme-react/data-grid';
-import { useGetCategoriesByVersionIdQuery, useUpdateCategoryMutation } from '../../api/queries.generated';
+} from "devextreme-react/data-grid";
+import {
+  useUpdateCategoryMutation as updateQuery,
+  useDeleteCategoryMutation as deleteQuery,
+  useCreateCategoryMutation as createQuery,
+  useCategoriesByCatalogIdQuery as getQuery,
+} from "../../api/queries.generated";
 import CustomStore from "devextreme/data/custom_store";
 
-
 export default () => {
-  const { data, loading, error } = useGetCategoriesByVersionIdQuery({
+  const { data, loading, error, refetch } = getQuery({
     variables: {
-      id: 100018
+      id: 2385,
     },
   });
 
+  const [updateObject] = updateQuery();
+  const [deleteObject] = deleteQuery();
+  const [createObject] = createQuery();
+  const listColumns = ["title", "brand", "expired" ];
+  if (loading || error) return "";
 
-
-  const [updateCategoryMutation] = useUpdateCategoryMutation();
-
-  if (loading || error) return '';
-
-  const updateData = (e) => {
-    updateCategoryMutation({
-      variables: {
-        category: { ...e.newData },
-        oid: e.oldData.oid
-      }
-    });
-
-  }
-
-
-  var gdata = JSON.parse(JSON.stringify(data.version.catalog.categories));
-
-
-
+  const customDataSource = new CustomStore({
+    key: "oid",
+    load: () => {
+      return data.catalog.products;
+    },
+    insert: (values) => {
+      createObject({
+        variables: { product: { ...values, catalog:data.catalog.oid, oid: uuidv4() } },
+      }).then((xx) => refetch());
+    },
+    update: (key, values) => {
+      updateObject({
+        variables: {
+          product: { ...values },
+          oid: key,
+        },
+      });
+    },
+    remove: (key) => {
+      deleteObject({
+        variables: {
+          oid: key,
+        },
+      }).then((xx) => refetch());
+    },
+  });
 
   return (
     <React.Fragment>
-      <h2 className={'content-block'}>Categories</h2>
-      <div className={'content-block'}>
-        <div className={'dx-card responsive-paddings'}>
+      <h2 className={"content-block"}>Products</h2>
+      <div className={"content-block"}>
+        <div className={"dx-card responsive-paddings"}>
           <DataGrid
-            className={'dx-card wide-card'}
-            key={'oid'}
-            dataSource={gdata}
+            className={"dx-card wide-card"}
+            dataSource={customDataSource}
             showBorders={false}
             focusedRowEnabled={true}
             defaultFocusedRowIndex={0}
             columnAutoWidth={true}
             columnHidingEnabled={true}
             cacheEnabled={false}
-            onRowUpdating={updateData}
           >
             <Editing
               allowUpdating={true}
-              // allowAdding={true}
-              // allowDeleting={true}
-              mode="popup" /> {/* 'batch' | 'cell' | 'form' | 'popup' */}
+              allowAdding={true}
+              allowDeleting={true}
+              mode="popup"
+            />
+            {listColumns.map((xx) => (
+              <Column key={xx} dataField={xx} />
+            ))}
+            {/* 'batch' | 'cell' | 'form' | 'popup' */}
             <Paging defaultPageSize={10} />
             <Pager showPageSizeSelector={true} showInfo={true} />
             <FilterRow visible={true} />
-            <Column dataField={'name'} />
-            <Column dataField={'image'} />
-            <MasterDetail enabled={true} component={subCategories} />
           </DataGrid>
         </div>
       </div>
     </React.Fragment>
   );
-
-
-  function subCategories(props) {
-
-    console.log(props);
-    return (
-      <DataGrid
-        dataSource={props.data.data.subCategories}
-        key={'oid'} />
-    )
-  }
-
-
-
-}
+};
