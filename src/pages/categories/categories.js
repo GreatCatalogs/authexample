@@ -51,7 +51,7 @@ export default () => {
     },
     remove: (key) => {
       deleteObject({
-        variables: {
+        variables: {f
           oid: key,
         },
       }).then((xx) => refetch());
