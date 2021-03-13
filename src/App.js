@@ -1,17 +1,20 @@
-import 'devextreme/dist/css/dx.common.css';
-import './themes/generated/theme.base.css';
-import './themes/generated/theme.additional.css';
-import React from 'react';
-import { HashRouter as Router } from 'react-router-dom';
-import './dx-styles.scss';
-import LoadPanel from 'devextreme-react/load-panel';
-import { NavigationProvider } from './contexts/navigation';
-import { AuthProvider, useAuth } from './contexts/auth';
-import { useScreenSizeClass } from './utils/media-query';
-import Content from './Content';
-import NotAuthenticatedContent from './NotAuthenticatedContent';
-import client from './api/client.js';
-import { ApolloProvider } from '@apollo/client';
+import "devextreme/dist/css/dx.common.css";
+import "./themes/generated/theme.base.css";
+import "./themes/generated/theme.additional.css";
+import React, { useEffect } from "react";
+import { HashRouter as Router } from "react-router-dom";
+import "./dx-styles.scss";
+import LoadPanel from "devextreme-react/load-panel";
+import { NavigationProvider } from "./contexts/navigation";
+import { AuthProvider, useAuth } from "./contexts/auth";
+import { useScreenSizeClass } from "./utils/media-query";
+import Content from "./Content";
+import NotAuthenticatedContent from "./NotAuthenticatedContent";
+import client from "./api/client.js";
+import { ApolloProvider } from "@apollo/client";
+import Amplify from "aws-amplify";
+import awsExports from "./aws-exports";
+Amplify.configure(awsExports);
 
 function App() {
   const { user, loading } = useAuth();

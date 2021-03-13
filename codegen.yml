@@ -1,5 +1,5 @@
-schema: https://gql.catalogshub.com/new
-documents: 'src/api/*.graphql'
+schema: https://catalogs:Catalogs!23@gql.catalogshub.com/dev
+documents: "src/api/*.graphql"
 generates:
   src/api/types.ts:
     - typescript

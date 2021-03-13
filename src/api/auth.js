@@ -48,9 +48,15 @@ export async function createAccount(email, password) {
     console.log(email, password);
     const { user } = await Auth.signUp({
       username: email,
+      email: email,
       password: password,
       attributes: {
-        email, // optional
+        email,
+        family_name:' ',
+        giveName: ' unknown',
+        given_name: ' ',
+        picture:''
+         // optional
         //phone_number,   // optional - E.164 number convention
         // other custom attributes
       },
@@ -89,7 +95,7 @@ export async function resetPassword(email) {
   try {
     // Send request
     console.log(email);
-
+    Auth.resetPassword();
     return {
       isOk: true,
     };

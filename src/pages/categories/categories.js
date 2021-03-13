@@ -26,7 +26,7 @@ export default () => {
   const [updateObject] = updateQuery();
   const [deleteObject] = deleteQuery();
   const [createObject] = createQuery();
-  const listColumns = ["title", "brand", "expired" ];
+  const listColumns = ["title", "brand", "expired"];
   if (loading || error) return "";
 
   const customDataSource = new CustomStore({
@@ -36,7 +36,9 @@ export default () => {
     },
     insert: (values) => {
       createObject({
-        variables: { product: { ...values, catalog:data.catalog.oid, oid: uuidv4() } },
+        variables: {
+          product: { ...values, catalog: data.catalog.oid, oid: uuidv4() },
+        },
       }).then((xx) => refetch());
     },
     update: (key, values) => {
